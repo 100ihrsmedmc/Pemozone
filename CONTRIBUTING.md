@@ -8,8 +8,8 @@ Thanks for your interest in contributing to Pemozone!
 2. Clone your fork and set up the development environment:
 
    ```bash
-   git clone --recurse-submodules https://github.com/<your-username>/Client.git
-   cd Client
+   git clone --recurse-submodules https://github.com/<your-username>/Pemozone.git
+   cd Pemozone
    ```
 
    SteelMC is a submodule; see [BUILDING.md](./BUILDING.md) for the
