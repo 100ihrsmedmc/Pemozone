@@ -47,6 +47,26 @@ pub fn build_touch_controls(
             centered: true,
         });
     }
+
+    // Player-added buttons, each labelled and faded by its own placement.
+    for index in 0..layout.settings.custom.len() {
+        let centre = layout.custom_centre(index);
+        let opacity = layout.custom_opacity(index);
+        push_circle(
+            elements,
+            centre,
+            layout.custom_radius(index),
+            fade(BASE, opacity),
+        );
+        elements.push(MenuElement::Text {
+            x: centre.x,
+            y: centre.y - FONT_SIZE * gs / 2.0,
+            text: layout.settings.custom[index].label.clone(),
+            scale: FONT_SIZE * gs,
+            color: fade(WHITE, opacity),
+            centered: true,
+        });
+    }
 }
 
 /// A colour with its alpha multiplied by `opacity`, for a faded control.

@@ -541,11 +541,14 @@ impl InputState {
         }
     }
 
-    /// Whether any input bound to `action` is held.
+    /// Whether any input bound to `action` is held, or a touch custom button
+    /// is holding it down.
     pub fn action_held(&self, action: Action) -> bool {
-        self.key_bindings
-            .inputs_for_action(action)
-            .any(|input| self.input_pressed(input))
+        self.touch_actions_down.contains(&action)
+            || self
+                .key_bindings
+                .inputs_for_action(action)
+                .any(|input| self.input_pressed(input))
     }
 
     /// Whether any input bound to `action` was pressed since `end_frame`.
@@ -1170,6 +1173,14 @@ impl InputState {
                     self.touch_actions_down.insert(action);
                     self.recent_actions.insert(action, true);
                     self.tap_releases.push(action);
+                }
+                TouchOutput::CustomPress(action) => {
+                    self.touch_actions_down.insert(action);
+                    self.recent_actions.insert(action, true);
+                }
+                TouchOutput::CustomRelease(action) => {
+                    self.touch_actions_down.remove(&action);
+                    self.recent_actions.remove(&action);
                 }
                 TouchOutput::Hotbar(slot) => self.select_hotbar(slot),
                 TouchOutput::PointerMove(p) => self.on_cursor_moved(p.x, p.y),

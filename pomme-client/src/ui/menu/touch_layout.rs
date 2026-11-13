@@ -9,40 +9,82 @@
 //! Pomme's menu toolkit and its existing touch layout.
 
 use super::*;
-use crate::app::input::touch::{TouchControl, TouchControls, TouchLayout};
+use crate::app::input::touch::{
+    CUSTOM_LABEL_MAX, EditTarget, TouchControls, TouchLayout, next_custom_action,
+};
 
 /// The editor's in-progress state, kept on [`MainMenu`] so a drag survives the
 /// per-frame rebuild.
 #[derive(Default)]
 pub struct TouchEditor {
     /// The control under a held press, following the pointer.
-    dragging: Option<TouchControl>,
+    dragging: Option<EditTarget>,
     /// The control whose size/opacity sliders show; the last one touched.
-    selected: Option<TouchControl>,
+    selected: Option<EditTarget>,
     /// Pointer-to-centre offset at grab, so a control doesn't jump under the
     /// finger.
     grab: (f32, f32),
-    /// Which slider (0 size, 1 opacity) is being dragged, so its capture
-    /// survives leaving its bounds.
+    /// Which slider (0 size, 1 opacity, 2 global scale) is being dragged, so
+    /// its capture survives leaving its bounds.
     active_slider: Option<u8>,
+    /// The label field of a selected custom button, focused for renaming.
+    pub(super) rename_field: Option<TextFieldState>,
+    /// The custom button `rename_field` edits.
+    rename_index: Option<usize>,
+}
+
+impl TouchEditor {
+    /// Whether a custom button is selected for the rename field and action
+    /// picker.
+    fn selected_custom(&self) -> Option<usize> {
+        match self.selected {
+            Some(EditTarget::Custom(index)) => Some(index),
+            _ => None,
+        }
+    }
+
+    /// Begin renaming a custom button, seeding the field with its label.
+    fn begin_rename(&mut self, index: usize, label: &str) {
+        let mut field = TextFieldState::new(CUSTOM_LABEL_MAX);
+        field.set_value(label, f32::MAX, &|s: &str| s.len() as f32 * 6.0);
+        field.set_focused(true);
+        self.rename_field = Some(field);
+        self.rename_index = Some(index);
+    }
+
+    pub(super) fn end_rename(&mut self) {
+        if let Some(field) = &mut self.rename_field {
+            field.set_focused(false);
+        }
+        self.rename_field = None;
+        self.rename_index = None;
+    }
 }
 
 const BTN_W: f32 = 92.0;
 const SLIDER_W: f32 = 210.0;
 /// Vertical gap between the three sliders, in GUI units.
 const SLIDER_PITCH: f32 = 24.0;
+/// The label field's width, and the action picker's, in GUI units.
+const CUSTOM_FIELD_W: f32 = 120.0;
 /// Highlight ring around the selected control, in GUI units beyond its radius.
 const SELECT_GLOW: f32 = 6.0;
 const COL_GLOW: [f32; 4] = [1.0, 0.9, 0.3, 0.35];
 const COL_PANEL: [f32; 4] = [0.0, 0.0, 0.0, 0.55];
 
-/// The y of the panel's first (global scale) slider, in pixels. A pure
-/// function of the GUI scale and font size, so the builder and its tests agree.
-fn sliders_top(gs: f32, fs: f32) -> f32 {
+/// The y of the panel's custom-button row, in pixels. A pure function of the
+/// GUI scale and font size, so the builder and its tests agree.
+fn custom_row_y(gs: f32, fs: f32) -> f32 {
     let panel_y = 4.0 * gs;
     let title_y = panel_y + 4.0 * gs;
     let row_y = title_y + fs + 8.0 * gs;
-    row_y + common::BTN_H * gs + 12.0 * gs
+    row_y + common::BTN_H * gs + 4.0 * gs
+}
+
+/// The y of the panel's first (global scale) slider, in pixels. A pure
+/// function of the GUI scale and font size, so the builder and its tests agree.
+fn sliders_top(gs: f32, fs: f32) -> f32 {
+    custom_row_y(gs, fs) + common::BTN_H * gs + 12.0 * gs
 }
 
 impl MainMenu {
@@ -85,11 +127,17 @@ impl MainMenu {
         let gap = 4.0 * gs;
         let row_w = btn_w * 3.0 + gap * 2.0;
         let slider_w = SLIDER_W * gs;
-        let panel_w = row_w.max(slider_w) + 16.0 * gs;
+        let add_w = 56.0 * gs;
+        let del_w = 56.0 * gs;
+        let field_w = CUSTOM_FIELD_W * gs;
+        let act_w = 76.0 * gs;
+        let custom_row_w = add_w + del_w + field_w + act_w + gap * 3.0;
+        let panel_w = row_w.max(slider_w).max(custom_row_w) + 16.0 * gs;
         let panel_x = cx - panel_w / 2.0;
         let panel_y = 4.0 * gs;
         let title_y = panel_y + 4.0 * gs;
         let row_y = title_y + fs + 8.0 * gs;
+        let custom_y = custom_row_y(gs, fs);
         let sliders_y = sliders_top(gs, fs);
         let panel_bottom = sliders_y + 3.0 * SLIDER_PITCH * gs + 6.0 * gs;
         let panel_rect = [panel_x, panel_y, panel_w, panel_bottom - panel_y];
@@ -99,21 +147,29 @@ impl MainMenu {
         let pointer = (cursor.0, cursor.1);
         let on_panel = common::hit_test(cursor, panel_rect);
         if input.clicked && !on_panel {
-            let grabbed = layout.control_at(glam::Vec2::new(pointer.0, pointer.1));
+            let grabbed = layout.edit_target_at(glam::Vec2::new(pointer.0, pointer.1));
             self.touch_editor.dragging = grabbed;
-            if let Some(control) = grabbed {
-                self.touch_editor.selected = Some(control);
-                let centre = layout.control_centre(control);
+            if let Some(target) = grabbed {
+                self.touch_editor.selected = Some(target);
+                let centre = layout.target_centre(target);
                 self.touch_editor.grab = (centre.x - pointer.0, centre.y - pointer.1);
+                // Selecting a custom button starts its rename; leaving one ends
+                // it, so the field follows the selection.
+                if let EditTarget::Custom(index) = target {
+                    let label = self.touch_layout.custom[index].label.clone();
+                    self.touch_editor.begin_rename(index, &label);
+                } else {
+                    self.touch_editor.end_rename();
+                }
             }
         }
         if !input.mouse_held {
             self.touch_editor.dragging = None;
         }
-        if let Some(control) = self.touch_editor.dragging {
+        if let Some(target) = self.touch_editor.dragging {
             let grab = self.touch_editor.grab;
-            self.touch_layout.set_centre(
-                control,
+            self.touch_layout.set_target_centre(
+                target,
                 (pointer.0 + grab.0) / sw,
                 (pointer.1 + grab.1) / sh,
             );
@@ -121,9 +177,9 @@ impl MainMenu {
         }
 
         // A glow behind the selected/dragging control, then the controls.
-        if let Some(control) = self.touch_editor.dragging.or(self.touch_editor.selected) {
-            let centre = layout.control_centre(control);
-            let radius = layout.control_radius(control) + SELECT_GLOW * gs;
+        if let Some(target) = self.touch_editor.dragging.or(self.touch_editor.selected) {
+            let centre = layout.target_centre(target);
+            let radius = layout.target_radius(target) + SELECT_GLOW * gs;
             elements.push(MenuElement::Rect {
                 x: centre.x - radius,
                 y: centre.y - radius,
@@ -210,6 +266,7 @@ impl MainMenu {
             self.touch_layout.reset_all();
             self.touch_layout_dirty = true;
             self.touch_editor.selected = None;
+            self.touch_editor.end_rename();
         }
         if save {
             self.touch_layout_dirty = true;
@@ -224,11 +281,22 @@ impl MainMenu {
         let placement = self
             .touch_editor
             .selected
-            .map_or_else(Default::default, |c| self.touch_layout.placement(c));
+            .map_or_else(Default::default, |c| self.touch_layout.target_placement(c));
         let control_label = self
             .touch_editor
             .selected
-            .map_or("(tap a control)", TouchControl::name);
+            .map_or("(tap a control)".to_owned(), |c| match c {
+                EditTarget::Builtin(control) => control.name().to_owned(),
+                EditTarget::Custom(index) => {
+                    let label = &self.touch_layout.custom[index].label;
+                    if label.is_empty() {
+                        "Custom".to_owned()
+                    } else {
+                        label.clone()
+                    }
+                }
+            });
+        let control_label = control_label.as_str();
         let label_scroll = common::LabelScroll {
             text_width_fn,
             time_secs: self.created.elapsed().as_secs_f64(),
@@ -303,10 +371,10 @@ impl MainMenu {
         if result.dragging {
             self.touch_editor.active_slider = Some(0);
         }
-        if let (Some(control), Some(v)) = (self.touch_editor.selected, result.new_value) {
+        if let (Some(target), Some(v)) = (self.touch_editor.selected, result.new_value) {
             let size = crate::app::input::touch::SIZE_MIN
                 + v * (crate::app::input::touch::SIZE_MAX - crate::app::input::touch::SIZE_MIN);
-            self.touch_layout.set_size(control, size);
+            self.touch_layout.set_target_size(target, size);
             self.touch_layout_dirty = true;
         }
         if !input.mouse_held && self.touch_editor.active_slider == Some(0) {
@@ -339,18 +407,157 @@ impl MainMenu {
         if result.dragging {
             self.touch_editor.active_slider = Some(1);
         }
-        if let (Some(control), Some(v)) = (self.touch_editor.selected, result.new_value) {
-            self.touch_layout.set_opacity(control, v);
+        if let (Some(target), Some(v)) = (self.touch_editor.selected, result.new_value) {
+            self.touch_layout.set_target_opacity(target, v);
             self.touch_layout_dirty = true;
         }
         if !input.mouse_held && self.touch_editor.active_slider == Some(1) {
             self.touch_editor.active_slider = None;
         }
 
+        // The custom-button row: Add / Delete, a rename field, and an action
+        // picker that only lights up with a custom button selected.
+        let mut rx = cx - custom_row_w / 2.0;
+        let add = push_button_f(
+            &mut elements,
+            &mut ctx,
+            &mut any_hovered,
+            cursor,
+            input.clicked,
+            rx,
+            custom_y,
+            add_w,
+            btn_h,
+            gs,
+            "Add",
+            true,
+        );
+        rx += add_w + gap;
+        let selected_custom = self.touch_editor.selected_custom();
+        let delete = push_button_f(
+            &mut elements,
+            &mut ctx,
+            &mut any_hovered,
+            cursor,
+            input.clicked,
+            rx,
+            custom_y,
+            del_w,
+            btn_h,
+            gs,
+            "Del",
+            selected_custom.is_some(),
+        );
+        rx += del_w + gap;
+        let field_rect = [rx, custom_y, field_w, btn_h];
+        let field_hit = common::hit_test(cursor, field_rect);
+        if let Some(index) = selected_custom {
+            // Focus the field on a click, feeding it this frame's typing.
+            if input.clicked && field_hit {
+                let label = self.touch_layout.custom[index].label.clone();
+                self.touch_editor.begin_rename(index, &label);
+            }
+            if self.touch_editor.rename_index == Some(index) {
+                if let Some(field) = &mut self.touch_editor.rename_field {
+                    let inner_w = field_w - 8.0 * gs;
+                    let wf = |s: &str| text_width_fn(s, fs);
+                    let mut clipboard = SystemClipboard;
+                    for ev in &input.events {
+                        field.handle(ev, &mut clipboard, inner_w, &wf);
+                    }
+                }
+                let focused = self.touch_editor.rename_field.is_some();
+                if let Some(field) = &self.touch_editor.rename_field {
+                    let label = field.value().to_owned();
+                    helpers::push_text_field(
+                        &mut elements,
+                        field_rect[0],
+                        field_rect[1],
+                        field_rect[2],
+                        field_rect[3],
+                        fs,
+                        gs,
+                        field,
+                        focused,
+                        text_width_fn,
+                    );
+                    if label != self.touch_layout.custom[index].label {
+                        self.touch_layout.set_custom_label(index, &label);
+                        self.touch_layout_dirty = true;
+                    }
+                }
+            } else {
+                helpers::push_text_field(
+                    &mut elements,
+                    field_rect[0],
+                    field_rect[1],
+                    field_rect[2],
+                    field_rect[3],
+                    fs,
+                    gs,
+                    &{
+                        let mut f = TextFieldState::new(CUSTOM_LABEL_MAX);
+                        f.set_value(
+                            &self.touch_layout.custom[index].label,
+                            f32::MAX,
+                            &|s: &str| s.len() as f32 * 6.0,
+                        );
+                        f
+                    },
+                    false,
+                    text_width_fn,
+                );
+            }
+        } else {
+            // No custom button selected: a dim, inert field placeholder.
+            common::push_text_field_box(&mut elements, field_rect, gs, false);
+        }
+        any_hovered |= field_hit && selected_custom.is_some();
+        rx += field_w + gap;
+        let action_label = match selected_custom.and_then(|i| self.touch_layout.custom_action(i)) {
+            Some(action) => action.display_name().into_owned(),
+            None => "-".to_owned(),
+        };
+        let action = push_button_f(
+            &mut elements,
+            &mut ctx,
+            &mut any_hovered,
+            cursor,
+            input.clicked,
+            rx,
+            custom_y,
+            act_w,
+            btn_h,
+            gs,
+            &action_label,
+            selected_custom.is_some(),
+        );
+
+        if add {
+            let centre = (0.5, 0.5);
+            let index = self
+                .touch_layout
+                .add_custom("Attack", Action::Destroy, centre);
+            self.touch_editor.selected = Some(EditTarget::Custom(index));
+            self.touch_layout_dirty = true;
+            self.touch_editor.begin_rename(index, "Attack");
+        }
+        if delete && let Some(index) = selected_custom {
+            self.touch_layout.remove_custom(index);
+            self.touch_editor.selected = None;
+            self.touch_editor.end_rename();
+            self.touch_layout_dirty = true;
+        }
+        if action && let Some(index) = selected_custom {
+            let next = next_custom_action(self.touch_layout.custom_action(index));
+            self.touch_layout.set_custom_action(index, next);
+            self.touch_layout_dirty = true;
+        }
+
         elements.push(MenuElement::Text {
             x: cx,
             y: sh - 22.0 * gs,
-            text: "Drag a control to move it. Tap one to resize or fade it.".into(),
+            text: "Drag a control to move it. Tap one to resize or fade it. Add a button, name it, then pick its action.".into(),
             scale: fs,
             color: COL_DIM,
             centered: true,
@@ -371,6 +578,7 @@ impl MainMenu {
 mod tests {
     use super::*;
     use crate::app::input::KeyBindings;
+    use crate::app::input::touch::TouchControl;
     use crate::renderer::pipelines::menu_overlay::MenuElement;
 
     const SW: f32 = 1024.0;
@@ -393,6 +601,19 @@ mod tests {
             settings: menu.touch_layout.clone(),
         };
         let c = layout.control_centre(control);
+        (c.x, c.y)
+    }
+
+    /// A cursor on a custom button's centre, at the editor's GUI scale.
+    fn cursor_on_custom(menu: &MainMenu, index: usize) -> (f32, f32) {
+        let gs = menu.gui_scale(SW, SH);
+        let layout = TouchLayout {
+            width: SW,
+            height: SH,
+            gs,
+            settings: menu.touch_layout.clone(),
+        };
+        let c = layout.custom_centre(index);
         (c.x, c.y)
     }
 
@@ -426,7 +647,10 @@ mod tests {
         // Press and hold on Jump's centre, drag the held pointer, then release.
         let start = cursor_on(&menu, TouchControl::Jump);
         let _ = press(&mut menu, &kb, start, true, true);
-        assert_eq!(menu.touch_editor.dragging, Some(TouchControl::Jump));
+        assert_eq!(
+            menu.touch_editor.dragging,
+            Some(EditTarget::Builtin(TouchControl::Jump))
+        );
         let _ = press(
             &mut menu,
             &kb,
@@ -469,7 +693,33 @@ mod tests {
 
         let at = cursor_on(&menu, TouchControl::Inventory);
         let _ = press(&mut menu, &kb, at, true, true);
-        assert_eq!(menu.touch_editor.selected, Some(TouchControl::Inventory));
+        assert_eq!(
+            menu.touch_editor.selected,
+            Some(EditTarget::Builtin(TouchControl::Inventory))
+        );
+    }
+
+    #[test]
+    fn a_custom_button_can_be_dragged_in_the_editor() {
+        let dir = std::env::temp_dir().join(format!("pomme-editor-custom-{}", std::process::id()));
+        let (mut menu, kb) = editor(dir.to_str().unwrap());
+        let index = menu
+            .touch_layout
+            .add_custom("Attack", Action::Destroy, (0.5, 0.5));
+        menu.touch_editor.selected = Some(EditTarget::Custom(index));
+
+        // Press and hold on the custom button, drag it, then release.
+        let start = cursor_on_custom(&menu, index);
+        let _ = press(&mut menu, &kb, start, true, true);
+        assert_eq!(menu.touch_editor.dragging, Some(EditTarget::Custom(index)));
+        let target = (start.0 - 120.0, start.1 - 60.0);
+        let _ = press(&mut menu, &kb, target, false, true);
+
+        let placement = menu.touch_layout.custom[index].placement;
+        let (x, y) = placement.centre.expect("a drag saves a centre");
+        assert!((x - target.0 / SW).abs() < 1e-4, "x = {x}");
+        assert!((y - target.1 / SH).abs() < 1e-4, "y = {y}");
+        assert!(menu.touch_layout_dirty);
     }
 
     #[test]

@@ -135,6 +135,101 @@ impl Placement {
     }
 }
 
+/// A player-added touch button: a label, the action it performs, and where it
+/// sits. Unlike the built-in controls, any number of these can exist, so they
+/// live in their own list rather than the fixed [`TouchControl`] placement
+/// slots.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct CustomButton {
+    /// The label drawn on the button and edited in the layout editor.
+    #[serde(default)]
+    pub label: String,
+    /// The action's stable id ([`Action::id`]), e.g. `key.attack`. An unknown
+    /// id leaves the button inert rather than failing the whole layout.
+    #[serde(default)]
+    pub action: String,
+    /// Where the button sits, the same optional overrides a built-in uses.
+    #[serde(default)]
+    pub placement: Placement,
+}
+
+/// The longest label a custom button may carry, matching the editor's field.
+pub const CUSTOM_LABEL_MAX: usize = 16;
+
+/// The actions the editor's picker cycles through, most useful first: a
+/// player adding a button usually wants attack or use.
+pub const CUSTOM_ACTIONS: &[Action] = &[
+    Action::Destroy,
+    Action::Use,
+    Action::Jump,
+    Action::Sneak,
+    Action::Sprint,
+    Action::ToggleInventory,
+    Action::OpenChat,
+    Action::OpenCommands,
+    Action::OpenMenu,
+    Action::ChangePerspective,
+    Action::DropItem,
+    Action::SwapOffhand,
+    Action::PickBlock,
+    Action::Screenshot,
+    Action::ViewPlayerList,
+    Action::ToggleGui,
+    Action::Forward,
+    Action::Backward,
+    Action::StrafeLeft,
+    Action::StrafeRight,
+    Action::NextHotbarSlot,
+    Action::PreviousHotbarSlot,
+    Action::Hotbar1,
+    Action::Hotbar2,
+    Action::Hotbar3,
+    Action::Hotbar4,
+    Action::Hotbar5,
+    Action::Hotbar6,
+    Action::Hotbar7,
+    Action::Hotbar8,
+    Action::Hotbar9,
+];
+
+/// Whether a custom button bound to `action` stays down while pressed. Attack
+/// and use do; a one-shot like the inventory does not, so its tap is emitted
+/// once and released the same frame.
+pub fn is_held_action(action: Action) -> bool {
+    matches!(
+        action,
+        Action::Destroy
+            | Action::Use
+            | Action::Jump
+            | Action::Sneak
+            | Action::Sprint
+            | Action::Forward
+            | Action::Backward
+            | Action::StrafeLeft
+            | Action::StrafeRight
+    )
+}
+
+/// The action after `current` in [`CUSTOM_ACTIONS`], wrapping. An unbound or
+/// unknown current action starts the cycle at the first entry.
+pub fn next_custom_action(current: Option<Action>) -> Action {
+    let Some(current) = current else {
+        return CUSTOM_ACTIONS[0];
+    };
+    match CUSTOM_ACTIONS.iter().position(|&a| a == current) {
+        Some(index) => CUSTOM_ACTIONS[(index + 1) % CUSTOM_ACTIONS.len()],
+        None => CUSTOM_ACTIONS[0],
+    }
+}
+
+/// A control the layout editor can move, resize or fade: one of the built-in
+/// [`TouchControl`]s, or a player-added button by index.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EditTarget {
+    Builtin(TouchControl),
+    Custom(usize),
+}
+
 /// The player's saved touch layout, as JSON. Missing fields take their
 /// defaults, so later controls and options can be added without resetting a
 /// saved file.
@@ -147,6 +242,9 @@ pub struct TouchLayoutSettings {
     /// A global size multiplier applied on top of each control's own size.
     #[serde(default = "one")]
     pub scale: f32,
+    /// Player-added buttons, in creation order. Empty on the built-in layout.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub custom: Vec<CustomButton>,
 }
 
 /// The default is the built-in layout: no placements, scale 1.0. This cannot
@@ -156,6 +254,7 @@ impl Default for TouchLayoutSettings {
         Self {
             placements: Vec::new(),
             scale: 1.0,
+            custom: Vec::new(),
         }
     }
 }
@@ -219,6 +318,97 @@ impl TouchLayoutSettings {
     pub fn reset_all(&mut self) {
         self.placements.clear();
         self.scale = 1.0;
+        self.custom.clear();
+    }
+
+    /// Add a button performing `action` with `label`, placed at the screen
+    /// fraction `centre`. Returns the new button's index.
+    pub fn add_custom(&mut self, label: &str, action: Action, centre: (f32, f32)) -> usize {
+        let placement = Placement {
+            centre: Some((centre.0.clamp(0.0, 1.0), centre.1.clamp(0.0, 1.0))),
+            ..Placement::default()
+        };
+        self.custom.push(CustomButton {
+            label: label.chars().take(CUSTOM_LABEL_MAX).collect(),
+            action: action.id().as_str().to_owned(),
+            placement,
+        });
+        self.custom.len() - 1
+    }
+
+    /// Remove the custom button at `index`, if it exists.
+    pub fn remove_custom(&mut self, index: usize) {
+        if index < self.custom.len() {
+            self.custom.remove(index);
+        }
+    }
+
+    /// Set a custom button's label, clamped to [`CUSTOM_LABEL_MAX`].
+    pub fn set_custom_label(&mut self, index: usize, label: &str) {
+        if let Some(button) = self.custom.get_mut(index) {
+            button.label = label.chars().take(CUSTOM_LABEL_MAX).collect();
+        }
+    }
+
+    /// Set a custom button's action, storing its stable id.
+    pub fn set_custom_action(&mut self, index: usize, action: Action) {
+        if let Some(button) = self.custom.get_mut(index) {
+            button.action = action.id().as_str().to_owned();
+        }
+    }
+
+    /// The action a custom button performs, or `None` for an unknown id.
+    pub fn custom_action(&self, index: usize) -> Option<Action> {
+        self.custom
+            .get(index)
+            .and_then(|button| Action::from_id(&button.action))
+    }
+
+    /// Move an edit target's centre to a screen fraction.
+    pub fn set_target_centre(&mut self, target: EditTarget, x: f32, y: f32) {
+        match target {
+            EditTarget::Builtin(control) => self.set_centre(control, x, y),
+            EditTarget::Custom(index) => {
+                if let Some(button) = self.custom.get_mut(index) {
+                    button.placement.centre = Some((x.clamp(0.0, 1.0), y.clamp(0.0, 1.0)));
+                }
+            }
+        }
+    }
+
+    /// Set an edit target's size multiplier.
+    pub fn set_target_size(&mut self, target: EditTarget, size: f32) {
+        match target {
+            EditTarget::Builtin(control) => self.set_size(control, size),
+            EditTarget::Custom(index) => {
+                if let Some(button) = self.custom.get_mut(index) {
+                    button.placement.size = Some(size.clamp(SIZE_MIN, SIZE_MAX));
+                }
+            }
+        }
+    }
+
+    /// Set an edit target's draw opacity.
+    pub fn set_target_opacity(&mut self, target: EditTarget, opacity: f32) {
+        match target {
+            EditTarget::Builtin(control) => self.set_opacity(control, opacity),
+            EditTarget::Custom(index) => {
+                if let Some(button) = self.custom.get_mut(index) {
+                    button.placement.opacity = Some(opacity.clamp(0.0, 1.0));
+                }
+            }
+        }
+    }
+
+    /// An edit target's placement, for the editor's sliders.
+    pub fn target_placement(&self, target: EditTarget) -> Placement {
+        match target {
+            EditTarget::Builtin(control) => self.placement(control),
+            EditTarget::Custom(index) => self
+                .custom
+                .get(index)
+                .map_or_else(Default::default, |button| button.placement),
+        }
     }
 
     /// The global scale, clamped so a bad save cannot zero the controls out.
@@ -418,6 +608,65 @@ impl TouchLayout {
         })
     }
 
+    /// A custom button's centre in pixels, honouring its saved placement.
+    pub fn custom_centre(&self, index: usize) -> Vec2 {
+        let button = &self.settings.custom[index];
+        let radius = self.custom_radius(index);
+        match button.placement.centre {
+            Some((x, y)) => Vec2::new(
+                (x * self.width).clamp(radius, self.width - radius),
+                (y * self.height).clamp(radius, self.height - radius),
+            ),
+            None => Vec2::new(self.width / 2.0, self.height / 2.0),
+        }
+    }
+
+    /// A custom button's radius in pixels, with its saved size applied.
+    pub fn custom_radius(&self, index: usize) -> f32 {
+        let size = self.settings.custom[index].placement.size_or_default();
+        BUTTON_RADIUS * self.gs * self.settings.scale() * size
+    }
+
+    /// A custom button's draw opacity, honouring its saved placement.
+    pub fn custom_opacity(&self, index: usize) -> f32 {
+        self.settings.custom[index].placement.opacity_or_default()
+    }
+
+    /// The custom button under a point, for gameplay input. Searched after the
+    /// built-in buttons, so a custom button never steals a built-in's tap.
+    fn custom_button_at(&self, p: Vec2) -> Option<usize> {
+        (0..self.settings.custom.len())
+            .find(|&i| p.distance(self.custom_centre(i)) <= self.custom_radius(i))
+    }
+
+    /// The editable control under a point, for the layout editor: custom
+    /// buttons take precedence (so a new button is always grabbable), then the
+    /// built-in controls, each with a small grab tolerance.
+    pub fn edit_target_at(&self, p: Vec2) -> Option<EditTarget> {
+        if let Some(index) = (0..self.settings.custom.len())
+            .find(|&i| p.distance(self.custom_centre(i)) <= self.custom_radius(i) + EDIT_GRAB_SLOP)
+        {
+            return Some(EditTarget::Custom(index));
+        }
+        self.control_at(p).map(EditTarget::Builtin)
+    }
+
+    /// An edit target's centre in pixels.
+    pub fn target_centre(&self, target: EditTarget) -> Vec2 {
+        match target {
+            EditTarget::Builtin(control) => self.control_centre(control),
+            EditTarget::Custom(index) => self.custom_centre(index),
+        }
+    }
+
+    /// An edit target's radius in pixels.
+    pub fn target_radius(&self, target: EditTarget) -> f32 {
+        match target {
+            EditTarget::Builtin(control) => self.control_radius(control),
+            EditTarget::Custom(index) => self.custom_radius(index),
+        }
+    }
+
     fn hotbar_slot_at(&self, p: Vec2) -> Option<u8> {
         crate::ui::hud::hotbar_slot_at(self.width, self.height, self.gs, (p.x, p.y))
     }
@@ -435,6 +684,11 @@ pub enum TouchOutput {
     Use,
     /// A tap of an action's key.
     Tap(Action),
+    /// A custom button bound to a held action went down; it stays down until
+    /// [`TouchOutput::CustomRelease`].
+    CustomPress(Action),
+    /// The held custom button above lifted, releasing its action.
+    CustomRelease(Action),
     Hotbar(u8),
     PointerMove(Vec2),
     PointerDown,
@@ -457,6 +711,8 @@ enum Role {
     },
     Jump,
     Pointer,
+    /// A custom button bound to a held action, held until it lifts.
+    CustomHeld(Action),
     /// A tap already handled on press; ignored until it lifts.
     Spent,
 }
@@ -529,6 +785,15 @@ impl TouchControls {
                 Some(action) => (Role::Spent, vec![TouchOutput::Tap(action)]),
                 None => (Role::Jump, Vec::new()),
             }
+        } else if let Some(index) = layout.custom_button_at(p) {
+            match layout.settings.custom_action(index) {
+                Some(action) if is_held_action(action) => (
+                    Role::CustomHeld(action),
+                    vec![TouchOutput::CustomPress(action)],
+                ),
+                Some(action) => (Role::Spent, vec![TouchOutput::Tap(action)]),
+                None => (Role::Spent, Vec::new()),
+            }
         } else if let Some(slot) = layout.hotbar_slot_at(p) {
             (Role::Spent, vec![TouchOutput::Hotbar(slot)])
         } else if p.x < layout.width * STICK_ZONE {
@@ -593,6 +858,7 @@ impl TouchControls {
                 vec![TouchOutput::Use]
             }
             Some(Role::Pointer) => vec![TouchOutput::PointerUp],
+            Some(Role::CustomHeld(action)) => vec![TouchOutput::CustomRelease(action)],
             _ => Vec::new(),
         }
     }
@@ -658,8 +924,9 @@ mod tests {
     use winit::event::TouchPhase;
 
     use super::{
-        Action, Placement, SIZE_MAX, SIZE_MIN, TouchButton, TouchContext, TouchControl,
-        TouchControls, TouchLayout, TouchLayoutSettings, TouchOutput,
+        Action, BUTTON_RADIUS, CUSTOM_ACTIONS, CUSTOM_LABEL_MAX, CustomButton, EditTarget,
+        Placement, SIZE_MAX, SIZE_MIN, TouchButton, TouchContext, TouchControl, TouchControls,
+        TouchLayout, TouchLayoutSettings, TouchOutput, next_custom_action,
     };
 
     /// The built-in layout, which every behavioural test uses.
@@ -1052,6 +1319,7 @@ mod tests {
                 Placement::default(),
             ],
             scale: 1.1,
+            custom: Vec::new(),
         };
         settings.save(&path).unwrap();
 
@@ -1142,5 +1410,128 @@ mod tests {
 
         assert_eq!(TouchLayoutSettings::load(&path), s);
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_custom_button_adds_names_binds_and_removes() {
+        let mut s = TouchLayoutSettings::default();
+        let index = s.add_custom("Attack", Action::Destroy, (0.5, 0.5));
+        assert_eq!(index, 0);
+        assert_eq!(s.custom.len(), 1);
+        assert_eq!(s.custom_action(0), Some(Action::Destroy));
+        assert_eq!(s.custom[0].placement.centre, Some((0.5, 0.5)));
+
+        // The label clamps to the field's maximum, and the action round-trips.
+        s.set_custom_label(0, &"x".repeat(CUSTOM_LABEL_MAX + 8));
+        assert_eq!(s.custom[0].label.chars().count(), CUSTOM_LABEL_MAX);
+        s.set_custom_action(0, Action::Use);
+        assert_eq!(s.custom_action(0), Some(Action::Use));
+
+        // Removing drops it, and the id survives a save/load round trip.
+        let dir = std::env::temp_dir().join(format!("pomme-touch-custom-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("touch_layout.json");
+        s.save(&path).unwrap();
+        let loaded = TouchLayoutSettings::load(&path);
+        assert_eq!(loaded.custom.len(), 1);
+        assert_eq!(loaded.custom_action(0), Some(Action::Use));
+
+        s.remove_custom(0);
+        assert!(s.custom.is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn an_unknown_custom_action_id_is_inert() {
+        let mut s = TouchLayoutSettings::default();
+        s.custom.push(CustomButton {
+            label: "Broken".into(),
+            action: "key.does.not.exist".into(),
+            placement: Placement::default(),
+        });
+        assert_eq!(s.custom_action(0), None);
+    }
+
+    #[test]
+    fn the_action_picker_cycles_and_wraps() {
+        // An unbound button starts the cycle at the first entry.
+        assert_eq!(next_custom_action(None), CUSTOM_ACTIONS[0]);
+        // A known action steps forward, and the last wraps to the first.
+        assert_eq!(next_custom_action(Some(Action::Destroy)), CUSTOM_ACTIONS[1]);
+        let last = *CUSTOM_ACTIONS.last().unwrap();
+        assert_eq!(next_custom_action(Some(last)), CUSTOM_ACTIONS[0]);
+    }
+
+    #[test]
+    fn a_custom_button_fires_its_action() {
+        // Attack is a held action: it stays down until the finger lifts.
+        let mut settings = TouchLayoutSettings::default();
+        let index = settings.add_custom("Attack", Action::Destroy, (0.5, 0.5));
+        let mut l = layout();
+        l.settings = settings.clone();
+        let at = l.custom_centre(index);
+
+        let mut c = TouchControls::default();
+        let t = Instant::now();
+        assert_eq!(
+            c.on_touch(1, TouchPhase::Started, at, ctx(true, false), &l, t),
+            [TouchOutput::CustomPress(Action::Destroy)]
+        );
+        assert_eq!(
+            c.on_touch(1, TouchPhase::Ended, at, ctx(true, false), &l, t),
+            [TouchOutput::CustomRelease(Action::Destroy)]
+        );
+
+        // The inventory is a one-shot: a tap fires once and releases itself.
+        let index = settings.add_custom("Bag", Action::ToggleInventory, (0.2, 0.2));
+        let mut l = layout();
+        l.settings = settings.clone();
+        let at = l.custom_centre(index);
+        assert_eq!(
+            c.on_touch(2, TouchPhase::Started, at, ctx(true, false), &l, t),
+            [TouchOutput::Tap(Action::ToggleInventory)]
+        );
+        assert!(
+            c.on_touch(2, TouchPhase::Ended, at, ctx(true, false), &l, t)
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_custom_button_is_an_edit_target() {
+        let mut settings = TouchLayoutSettings::default();
+        settings.add_custom("Attack", Action::Destroy, (0.3, 0.6));
+        let mut l = layout();
+        l.settings = settings;
+
+        let centre = l.custom_centre(0);
+        assert_eq!(centre, Vec2::new(0.3 * 1600.0, 0.6 * 900.0));
+        assert_eq!(l.edit_target_at(centre), Some(EditTarget::Custom(0)));
+
+        // A drag through the editor's setters moves it and saves a centre.
+        l.settings
+            .set_target_centre(EditTarget::Custom(0), 0.7, 0.2);
+        assert_eq!(l.settings.custom[0].placement.centre, Some((0.7, 0.2)));
+        l.settings.set_target_size(EditTarget::Custom(0), 1.5);
+        assert_eq!(l.custom_radius(0), BUTTON_RADIUS * 2.0 * 1.5);
+    }
+
+    #[test]
+    fn a_custom_button_takes_edit_priority_over_a_builtin() {
+        // Placed on top of the jump button, the custom button wins in the
+        // editor, so a freshly added button is always grabbable.
+        let jump = layout().button_centre(TouchButton::Jump);
+        let mut l = layout();
+        let mut settings = TouchLayoutSettings::default();
+        settings.add_custom(
+            "Attack",
+            Action::Destroy,
+            (jump.x / l.width, jump.y / l.height),
+        );
+        l.settings = settings;
+        assert_eq!(
+            l.edit_target_at(l.custom_centre(0)),
+            Some(EditTarget::Custom(0))
+        );
     }
 }

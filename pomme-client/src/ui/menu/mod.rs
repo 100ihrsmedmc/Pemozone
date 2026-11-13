@@ -1130,6 +1130,9 @@ impl MainMenu {
         self.screen = screen;
         self.end_binding_capture();
         self.focused_field = None;
+        // Leaving the editor drops its in-progress rename, so the soft keyboard
+        // hides with the field.
+        self.touch_editor.end_rename();
         self.focus = None;
         self.screen_gen += 1;
         self.slider_can_change_value = true;
@@ -1192,7 +1195,7 @@ impl MainMenu {
     /// A form's text field has keyboard focus.
     #[cfg(mobile)]
     pub(crate) fn text_field_focused(&self) -> bool {
-        self.focused_field.is_some()
+        self.focused_field.is_some() || self.touch_editor.rename_field.is_some()
     }
 
     pub(crate) fn gui_scale(&self, screen_w: f32, screen_h: f32) -> f32 {
