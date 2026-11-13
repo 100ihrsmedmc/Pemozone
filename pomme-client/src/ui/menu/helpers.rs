@@ -1080,9 +1080,17 @@ pub(super) const DROP_LINKS_W: f32 = 74.0;
 pub(super) const DROP_THEME_W: f32 = 82.0;
 
 pub(super) const LINKS: [(&str, char, &str); 3] = [
-    ("Pomme", ICON_GLOBE, "https://github.com/100ihrsmedmc/Client"),
+    (
+        "Pomme",
+        ICON_GLOBE,
+        "https://github.com/100ihrsmedmc/Client",
+    ),
     ("Discord", ICON_COMMENT, "https://discord.gg/ucBA55bHPR"),
-    ("GitHub", ICON_CODE, "https://github.com/100ihrsmedmc/Pemozone"),
+    (
+        "GitHub",
+        ICON_CODE,
+        "https://github.com/100ihrsmedmc/Pemozone",
+    ),
 ];
 pub(super) const THEMES: [(&str, PanoramaTheme); 3] = [
     ("Java", PanoramaTheme::Java),

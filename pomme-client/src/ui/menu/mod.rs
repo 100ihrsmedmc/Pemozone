@@ -607,7 +607,8 @@ const COL_DIM: [f32; 4] = [0.55, 0.57, 0.69, 1.0];
 const COL_DARK_DIM: [f32; 4] = [0.4, 0.42, 0.52, 1.0];
 const COL_RED: [f32; 4] = [0.88, 0.25, 0.32, 1.0];
 const COL_SEP: [f32; 4] = [1.0, 1.0, 1.0, 0.07];
-/// Tint of the "Pemozone" wordmark, on the title screen and in the credits roll.
+/// Tint of the "Pemozone" wordmark, on the title screen and in the credits
+/// roll.
 const COL_WORDMARK: [f32; 4] = [0.94, 0.96, 0.99, 0.95];
 
 const DOUBLE_CLICK_MS: u128 = 400;

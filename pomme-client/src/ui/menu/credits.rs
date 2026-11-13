@@ -9,7 +9,8 @@ use super::*;
 
 /// Mojang's attribution page; pomme ships vanilla assets, so this stays theirs.
 const ATTRIBUTION_URL: &str = "https://aka.ms/MinecraftJavaAttribution";
-const LICENSES_URL: &str = "https://github.com/100ihrsmedmc/Pemozone/blob/main/THIRD_PARTY_LICENSES.md";
+const LICENSES_URL: &str =
+    "https://github.com/100ihrsmedmc/Pemozone/blob/main/THIRD_PARTY_LICENSES.md";
 
 const CREDITS_JSON: &str = include_str!("credits.json");
 
