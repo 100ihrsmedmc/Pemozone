@@ -5543,7 +5543,7 @@ pub fn update_game(
             core.apply_cursor_grab(&gfx.window, Some(game));
         }
         PauseAction::ReportBugs => {
-            crate::util::open_url("https://github.com/PommeMC/Client/issues");
+            crate::util::open_url("https://github.com/100ihrsmedmc/Pemozone/issues");
         }
         PauseAction::None => {}
     }

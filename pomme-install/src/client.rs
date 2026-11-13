@@ -1,4 +1,4 @@
-//! The Pomme client's own builds, published as `client-v*` GitHub releases:
+//! The Pemozone client's own builds, published as `client-v*` GitHub releases:
 //! finding the newest, and downloading this platform's zip checked against the
 //! release's `sha256sums.txt`.
 
@@ -11,7 +11,7 @@ use crate::{Progress, get};
 
 /// Newest first; listed rather than `/releases/latest`, which held the
 /// launcher's releases before the client's.
-const RELEASES_URL: &str = "https://api.github.com/repos/PommeMC/Client/releases?per_page=30";
+const RELEASES_URL: &str = "https://api.github.com/repos/100ihrsmedmc/Pemozone/releases?per_page=30";
 const TAG_PREFIX: &str = "client-v";
 const CHECKSUMS_ASSET: &str = "sha256sums.txt";
 

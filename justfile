@@ -74,7 +74,7 @@ ingame-server:
     @cargo run -p ingame-test -- --server-only
 
 # Android (pomme-android/README.md): the arm64 debug APK.
-android_app := "com.pommemc.client"
+android_app := "com.pemozone.client"
 
 android-build:
     @python3 tools/build_openal.py android pomme-android/app/src/main/jniLibs/arm64-v8a

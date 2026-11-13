@@ -7,7 +7,7 @@
 AppId={{22F91093-7D94-4FA4-9045-1F5CBA3D82D5}
 AppName=Pemozone
 AppVersion={#AppVersion}
-AppPublisher=PommeMC
+AppPublisher=Pemozone
 AppPublisherURL=https://github.com/100ihrsmedmc/Pemozone
 DefaultDirName={localappdata}\Programs\Pemozone
 DisableProgramGroupPage=yes
