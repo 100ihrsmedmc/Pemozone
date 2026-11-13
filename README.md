@@ -93,26 +93,31 @@ what has and has not been verified on real hardware.
    editor (Options → Controls → Touch Layout) previews the live controls and lets
    you drag one to move it, select it, and adjust its size and opacity, plus a
    global size.
-3. **Touch layout persistence** — the layout is written to `touch_layout.json`
+3. **Player-added custom buttons** — the editor can add your own on-screen
+   buttons, each with a name you type and a game action picked from a list
+   (attack, use, jump, chat, inventory, hotbar slots and more). Custom buttons
+   can be dragged, resized and faded like the built-ins, and a held action (for
+   example attack) stays down until you lift your finger.
+4. **Touch layout persistence** — the layout is written to `touch_layout.json`
    next to the other settings and restored on the next launch, atomically, so an
    interrupted save cannot corrupt it.
-4. **Inventory and container closing behavior** — a touch player can close the
+5. **Inventory and container closing behavior** — a touch player can close the
    inventory, a container or the creative screen from the same corner that opens
    them; Escape and `Action::Close` route through the same per-screen close path.
-5. **Optional built-in resource packs** — vanilla's optional built-in packs
+6. **Optional built-in resource packs** — vanilla's optional built-in packs
    (for example `programmer_art` and `high_contrast`) are discovered from the
    installation's asset index and offered on the resource-pack screen, with their
    enabled/disabled state kept across reloads.
-6. **Audio support** — vanilla sound events, music and subtitles through
+7. **Audio support** — vanilla sound events, music and subtitles through
    OpenAL Soft, embedded as `soft_oal.framework` on iOS.
-7. **Shader compatibility** — the renderer loads shader packs, with the
+8. **Shader compatibility** — the renderer loads shader packs, with the
    per-version program set and the sky/horizon stages that packs rely on.
-8. **Multiplayer and local-network permissions** — the iOS app declares the
+9. **Multiplayer and local-network permissions** — the iOS app declares the
    local-network usage description and allows local networking, so a LAN world
    or a self-hosted server can be reached and the system prompt appears.
-9. **ProMotion support** — the iOS app opts out of the default 60 Hz minimum
-   frame duration on ProMotion displays (iPhone 13 Pro and later, iPad Pro), so
-   higher frame-rate settings can be reached where the display supports them.
+10. **ProMotion support** — the iOS app opts out of the default 60 Hz minimum
+    frame duration on ProMotion displays (iPhone 13 Pro and later, iPad Pro), so
+    higher frame-rate settings can be reached where the display supports them.
 
 ## Supported platforms and Minecraft versions
 
