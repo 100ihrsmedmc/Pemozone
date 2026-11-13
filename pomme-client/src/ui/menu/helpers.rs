@@ -572,7 +572,7 @@ pub(super) fn push_bottom_text(
         centered: false,
     });
 
-    let name = "Pomme";
+    let name = "Pemozone";
     let tag = crate::update::version();
     let tag_size = fs * 0.65;
     let gap = 2.0 * gs;
@@ -1080,18 +1080,14 @@ pub(super) const DROP_LINKS_W: f32 = 74.0;
 pub(super) const DROP_THEME_W: f32 = 82.0;
 
 pub(super) const LINKS: [(&str, char, &str); 3] = [
-    ("Website", ICON_GLOBE, "https://pomme.rs"),
+    ("Pomme", ICON_GLOBE, "https://github.com/100ihrsmedmc/Client"),
     ("Discord", ICON_COMMENT, "https://discord.gg/ucBA55bHPR"),
-    (
-        "GitHub",
-        ICON_CODE,
-        "https://github.com/PommeMC/Pomme-Client",
-    ),
+    ("GitHub", ICON_CODE, "https://github.com/100ihrsmedmc/Pemozone"),
 ];
 pub(super) const THEMES: [(&str, PanoramaTheme); 3] = [
     ("Java", PanoramaTheme::Java),
     ("Bedrock", PanoramaTheme::Bedrock),
-    ("Pomme", PanoramaTheme::Pomme),
+    ("Pemozone", PanoramaTheme::Pomme),
 ];
 
 /// The Bedrock theme's textures, downloaded the first time it's picked.

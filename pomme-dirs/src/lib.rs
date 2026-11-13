@@ -146,17 +146,17 @@ pub fn set_root(root: PathBuf) {
     let _ = ROOT.set(root);
 }
 
-/// The per-user layout: `%LOCALAPPDATA%\Pomme`,
-/// `~/Library/Application Support/Pomme` or `~/.local/share/pomme`, unless
-/// [`set_root`] named another.
+/// The per-user layout: `%LOCALAPPDATA%\Pemozone`,
+/// `~/Library/Application Support/Pemozone` or `~/.local/share/pemozone`,
+/// unless [`set_root`] named another.
 pub fn layout() -> &'static Layout {
     static LAYOUT: OnceLock<Layout> = OnceLock::new();
     LAYOUT.get_or_init(|| {
         let root = ROOT.get().cloned().unwrap_or_else(|| {
             let name = if cfg!(target_os = "linux") {
-                "pomme"
+                "pemozone"
             } else {
-                "Pomme"
+                "Pemozone"
             };
             directories::BaseDirs::new()
                 .map(|dirs| dirs.data_local_dir().join(name))
@@ -355,7 +355,7 @@ mod tests {
     fn old_and_new(name: &str) -> (PathBuf, PathBuf, Layout) {
         let base = scratch(name);
         let old = base.join(".pomme");
-        let layout = Layout::new(base.join("Pomme"));
+        let layout = Layout::new(base.join("Pemozone"));
         (base, old, layout)
     }
 
@@ -405,7 +405,7 @@ mod tests {
 
         layout.migrate_from(&old).unwrap();
 
-        let root = base.join("Pomme");
+        let root = base.join("Pemozone");
         for file in [
             "minecraft/assets/indexes/26.2.json",
             "minecraft/assets/objects/ab/abcd",

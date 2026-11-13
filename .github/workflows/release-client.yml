@@ -255,6 +255,6 @@ jobs:
           generate_release_notes: ${{ needs.check.outputs.prev != '' }}
           body: |
             These builds aren't signed yet, so the first launch needs one extra step:
-            - **macOS:** open `Pomme.app` with right-click → Open, or allow it under System Settings → Privacy & Security.
+            - **macOS:** open `Pemozone.app` with right-click → Open, or allow it under System Settings → Privacy & Security.
             - **Windows:** on the SmartScreen prompt, choose More info → Run anyway.
             - **Linux:** `chmod +x pomme-client-linux-x64-gnu.AppImage`, then run it.

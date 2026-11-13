@@ -1,5 +1,58 @@
 # Third-Party Licenses
 
+Pemozone is built on the Pomme engine and adapts work from other open-source
+projects. This file lists the third-party components, their licenses, and the
+required notices. The two most important upstream projects are described first.
+
+## Pomme — the engine Pemozone is built on
+
+Pemozone is a derivative work of Pomme, the Rust Minecraft: Java Edition client
+engine. The bulk of the client, renderer, protocol layer, networking, audio and
+world code comes from Pomme unchanged or lightly adapted.
+
+Source: <https://github.com/100ihrsmedmc/Client>
+
+License: GPL-3.0-or-later. Pomme's GPL-3.0 license text is preserved verbatim as
+[LICENSE](./LICENSE), and Pemozone as a whole is distributed under the same
+license. Copyright (C) 2026 Purdze and the Pomme contributors.
+
+## Kelly-Inc/horizon-ios
+
+Pemozone's touch-layout model and its layout editor are adapted from concepts in
+Horizon's MIT-licensed touch layout (`crates/horizon-client-render/src/touch/layout.rs`
+and its editor): data-driven placements, normalized coordinates, and optional
+per-control overrides for centre, size and opacity. The Pemozone implementation
+is written in this repository; the design is Horizon's.
+
+Source: <https://github.com/Kelly-Inc/horizon-ios>
+
+License: MIT. The full notice is preserved as
+[LICENSE-Horizon-MIT.txt](./LICENSE-Horizon-MIT.txt):
+
+```
+MIT License
+
+Copyright (c) 2026 Ludovic Marie and the Horizon contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
 ## Inspirateur/binary-greedy-meshing
 
 This project includes portions of code taken and modified from binary-greedy-meshing.

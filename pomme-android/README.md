@@ -42,7 +42,7 @@ just android-log                           # logcat, filtered to pomme
 `android-config` writes) holds the same flags the desktop client takes. It
 and the data folder (laid out as on desktop: `minecraft/`, `profiles/` and so
 on) live in the app's internal storage, reached with
-`adb shell run-as com.pommemc.client`.
+`adb shell run-as com.pemozone.client`.
 
 ## Signing in
 

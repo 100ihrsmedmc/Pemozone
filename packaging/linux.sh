@@ -27,11 +27,11 @@ fetch "$tool_url" "$stage/appimagetool" "$tool_sha"
 fetch "$runtime_url" "$stage/runtime" "$runtime_sha"
 chmod +x "$stage/appimagetool"
 
-appdir="$stage/Pomme.AppDir"
+appdir="$stage/Pemozone.AppDir"
 mkdir -p "$appdir/usr/bin" "$(dirname "$out")"
 cp "$bundle"/* "$appdir/usr/bin/"
 cp "$here/linux/pomme.desktop" "$appdir/"
-cp "$here/../pomme-client/assets/icon.png" "$appdir/pomme.png"
+cp "$here/../pomme-client/assets/icon.png" "$appdir/pemozone.png"
 ln -s usr/bin/pomme-client "$appdir/AppRun"
 
 # CI runners have no FUSE to mount the tool's own AppImage.

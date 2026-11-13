@@ -617,7 +617,7 @@ fn create_window(
     // otherwise make it the desktop size, and it never reports visibility, so
     // the first frame couldn't show a hidden one.
     let mut window_attrs = Window::default_attributes()
-        .with_title("Pomme")
+        .with_title("Pemozone")
         .with_fullscreen(core.display_mode.fullscreen_for(monitor))
         .with_visible(cfg!(mobile))
         .with_active(!core.test_window)
@@ -633,7 +633,7 @@ fn create_window(
 pub(crate) fn report_renderer_failure(error: &dyn std::fmt::Display) {
     tracing::error!("Failed to create renderer: {error}");
     show_error_dialog(&format!(
-        "Pomme couldn't start its renderer:\n{error}\n\n\
+        "Pemozone couldn't start its renderer:\n{error}\n\n\
          Pomme needs a graphics card and driver with Vulkan 1.2 support. On \
          Intel integrated graphics that means 6th generation (Skylake) or \
          newer. Updating the graphics driver may help."
@@ -659,7 +659,7 @@ fn show_error_dialog(text: &str) {
         MessageBoxW(
             std::ptr::null_mut(),
             wide(text).as_ptr(),
-            wide("Pomme").as_ptr(),
+            wide("Pemozone").as_ptr(),
             MB_ICONERROR,
         );
     }

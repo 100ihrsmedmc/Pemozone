@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.pommemc.client"
+    namespace = "com.pemozone.client"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.pommemc.client"
+        applicationId = "com.pemozone.client"
         // Android 10, the first with a Vulkan 1.1 loader everywhere.
         minSdk = 29
         targetSdk = 35

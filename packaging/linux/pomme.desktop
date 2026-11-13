@@ -1,8 +1,8 @@
 [Desktop Entry]
 Type=Application
-Name=Pomme
-Comment=Minecraft client
+Name=Pemozone
+Comment=Minecraft: Java Edition client
 Exec=pomme-client
-Icon=pomme
+Icon=pemozone
 Categories=Game;
 Terminal=false

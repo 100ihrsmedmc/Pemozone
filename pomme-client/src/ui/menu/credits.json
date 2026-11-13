@@ -29,6 +29,28 @@
     ]
   },
   {
+    "section": "Pemozone",
+    "disciplines": [
+      {
+        "discipline": "",
+        "titles": [
+          {
+            "title": "iOS Client By",
+            "names": ["The Pemozone contributors"]
+          },
+          {
+            "title": "Built On The Pomme Engine By",
+            "names": ["Purdze and the Pomme contributors"]
+          },
+          {
+            "title": "Touch Layout Inspired By",
+            "names": ["Ludovic Marie and the Horizon contributors"]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "section": "Built With",
     "disciplines": [
       {

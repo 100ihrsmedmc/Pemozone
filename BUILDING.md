@@ -1,4 +1,4 @@
-# Building Pomme
+# Building Pemozone
 
 ## Layout
 
@@ -38,7 +38,7 @@ so its build processes inherit the SDK variables.
 Clone with submodules, since singleplayer builds SteelMC by default:
 
 ```bash
-git clone --recurse-submodules https://github.com/PommeMC/Client.git
+git clone --recurse-submodules https://github.com/100ihrsmedmc/Pemozone.git
 # or, on an existing clone
 git submodule update --init
 ```
@@ -105,15 +105,15 @@ They only apply on desktop, and don't change saved settings or fullscreen.
 
 ### Data folder
 
-The client keeps its files in one per-user folder: `%LOCALAPPDATA%\Pomme` on
-Windows, `~/Library/Application Support/Pomme` on macOS and
-`~/.local/share/pomme` on Linux. An older `.pomme` folder is moved into it on
+The client keeps its files in one per-user folder: `%LOCALAPPDATA%\Pemozone` on
+Windows, `~/Library/Application Support/Pemozone` on macOS and
+`~/.local/share/pemozone` on Linux. An older `.pomme` folder is moved into it on
 first launch.
 
 ```
 minecraft/assets/     asset index and objects
 minecraft/versions/   each version's json, jar and extracted assets
-pomme-assets/         Pomme's branded assets
+pomme-assets/         the engine's branded assets (asset namespace)
 profiles/<name>/      options, servers, saves, screenshots, logs, mods, packs
 cache/<version>/      rebuildable; safe to delete
 launcher/             left by the old launcher: its settings, installations and client builds

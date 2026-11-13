@@ -1,6 +1,6 @@
-# Contributing to Pomme
+# Contributing to Pemozone
 
-Thanks for your interest in contributing to Pomme!
+Thanks for your interest in contributing to Pemozone!
 
 ## Getting Started
 
@@ -126,7 +126,7 @@ A plain `v*` tag does nothing.
 
 ## Reporting Issues
 
-Include reproduction steps and your system info (OS, GPU, Pomme version)
+Include reproduction steps and your system info (OS, GPU, Pemozone version)
 for bug reports.
 
 ## Code of Conduct

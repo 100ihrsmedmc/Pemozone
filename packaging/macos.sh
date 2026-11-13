@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Wraps a release bundle (the files of pomme-client-macos-arm64.zip) in
-# Pomme.app inside a dmg. The bundle's files all go to Contents/MacOS, where
+# Pemozone.app inside a dmg. The bundle's files all go to Contents/MacOS, where
 # the binary finds its libraries and the updater swaps them.
 #
 # usage: packaging/macos.sh <bundle-dir> <version> <out.dmg>
@@ -11,11 +11,11 @@ here=$(cd "$(dirname "$0")" && pwd)
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
 
-app="$stage/Pomme.app/Contents"
+app="$stage/Pemozone.app/Contents"
 mkdir -p "$app/MacOS" "$app/Resources" "$(dirname "$out")"
 cp "$bundle"/* "$app/MacOS/"
 cp "$here/../pomme-client/assets/icon.icns" "$app/Resources/"
 sed "s/@VERSION@/$version/g" "$here/macos/Info.plist" > "$app/Info.plist"
 ln -s /Applications "$stage/Applications"
 
-hdiutil create -volname Pomme -srcfolder "$stage" -format UDZO -ov "$out"
+hdiutil create -volname Pemozone -srcfolder "$stage" -format UDZO -ov "$out"

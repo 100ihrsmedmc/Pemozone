@@ -1,0 +1,31 @@
+Pemozone
+========
+
+An iOS and iPadOS Minecraft: Java Edition client with a focus on touch controls.
+
+This product is an independent community project. It is NOT an official release
+of Pomme, and it is NOT affiliated with, endorsed by, or produced by the Horizon
+project, Mojang Studios or Microsoft.
+
+
+Attribution
+-----------
+
+Pemozone is a derivative work of the Pomme engine
+(https://github.com/100ihrsmedmc/Client), which is licensed under the GNU
+General Public License v3.0 or later. Pemozone is distributed under the same
+license; the full text is in LICENSE. Copyright (C) 2026 Purdze and the Pomme
+contributors.
+
+Pemozone's touch-layout model and layout editor are adapted from concepts in
+Horizon iOS (https://github.com/Kelly-Inc/horizon-ios), which is licensed under
+the MIT License, Copyright (c) 2026 Ludovic Marie and the Horizon contributors.
+The MIT notice is preserved in LICENSE-Horizon-MIT.txt.
+
+Third-party components, their licenses and their notices are listed in
+THIRD_PARTY_LICENSES.md. The pomme-singleplayer crate links SteelMC
+(https://github.com/Steel-Foundation/SteelMC, AGPL-3.0-or-later) and is
+therefore AGPL-3.0-or-later.
+
+Pemozone contains no Mojang code. Minecraft is a trademark of Mojang Studios.
+You must own Minecraft: Java Edition to sign in and play.

@@ -49,7 +49,7 @@ struct ThemeMount<'a> {
 impl ThemeSpecification {
     fn mount(&self) -> Result<ThemeMount<'_>, ResourceError> {
         let (root, id, name, directory) = match self {
-            Self::Pomme { root } => (root, "theme/pomme", "Pomme theme assets", "panoramas"),
+            Self::Pomme { root } => (root, "theme/pomme", "Pemozone theme assets", "panoramas"),
             Self::Bedrock { root } => {
                 (root, "theme/bedrock", "Bedrock theme assets", "textures/ui")
             }
@@ -198,9 +198,9 @@ impl RepositorySource for BuiltinRepositorySource {
         let mut state = self.state.borrow_mut();
         let mut packs = vec![Pack::with_id(
             state.pomme_id.clone(),
-            builtin_location("pomme", Component::text("Pomme embedded assets")),
+            builtin_location("pomme", Component::text("Pemozone embedded assets")),
             // Embedded resources ship with this client, not an external format.
-            computed_metadata("Pomme embedded assets", PackCompat::Compatible),
+            computed_metadata("Pemozone embedded assets", PackCompat::Compatible),
             required(PackPosition::Bottom, true),
             Rc::new(EmbeddedResourcesSupplier::new()),
         )];

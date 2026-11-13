@@ -1,4 +1,4 @@
-name: Build Pomme iOS
+name: Build Pemozone iOS
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: pomme-ios-${{ github.ref }}
+  group: pemozone-ios-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -119,8 +119,8 @@ jobs:
           # spelling cc-rs also reads is passed through env instead.
           env "CC_aarch64-apple-darwin=$RUNNER_TEMP/clang-macos-sdk" \
             xcodebuild \
-              -project pomme-ios/Pomme.xcodeproj \
-              -scheme Pomme \
+              -project pomme-ios/Pemozone.xcodeproj \
+              -scheme Pemozone \
               -sdk iphoneos \
               -configuration Release \
               -derivedDataPath "$RUNNER_TEMP/DerivedData" \
@@ -132,19 +132,19 @@ jobs:
 
       - name: Package IPA
         run: |
-          APP="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/Pomme.app"
+          APP="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/Pemozone.app"
           test -d "$APP"
           mkdir -p "$RUNNER_TEMP/ipa/Payload"
-          ditto "$APP" "$RUNNER_TEMP/ipa/Payload/Pomme.app"
+          ditto "$APP" "$RUNNER_TEMP/ipa/Payload/Pemozone.app"
           cd "$RUNNER_TEMP/ipa"
-          zip -qry "$GITHUB_WORKSPACE/Pomme-unsigned.ipa" Payload
-          test -s "$GITHUB_WORKSPACE/Pomme-unsigned.ipa"
+          zip -qry "$GITHUB_WORKSPACE/Pemozone-unsigned.ipa" Payload
+          test -s "$GITHUB_WORKSPACE/Pemozone-unsigned.ipa"
 
       - name: Upload IPA
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: Pomme-iOS-unsigned
-          path: Pomme-unsigned.ipa
+          name: Pemozone-iOS-unsigned
+          path: Pemozone-unsigned.ipa
           if-no-files-found: error
 
       - name: Publish IPA to GitHub Release
@@ -152,8 +152,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="ios-build-${GITHUB_RUN_ID}"
-          gh release create "$TAG" Pomme-unsigned.ipa \
+          gh release create "$TAG" Pemozone-unsigned.ipa \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Pomme iOS Build #${GITHUB_RUN_NUMBER}" \
+            --title "Pemozone iOS Build #${GITHUB_RUN_NUMBER}" \
             --notes "Experimental iOS build produced by GitHub Actions.\n\n- Build: successful\n- Platform: iOS / Apple Silicon\n- Status: Unsigned IPA (not code-signed)." \
             --prerelease

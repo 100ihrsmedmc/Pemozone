@@ -5,11 +5,11 @@
 
 [Setup]
 AppId={{22F91093-7D94-4FA4-9045-1F5CBA3D82D5}
-AppName=Pomme
+AppName=Pemozone
 AppVersion={#AppVersion}
 AppPublisher=PommeMC
-AppPublisherURL=https://github.com/PommeMC/Client
-DefaultDirName={localappdata}\Programs\Pomme
+AppPublisherURL=https://github.com/100ihrsmedmc/Pemozone
+DefaultDirName={localappdata}\Programs\Pemozone
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -38,17 +38,17 @@ Source: "{#Bundle}\*"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\pomme-client\third-party\OpenAL-Soft-*.txt"; DestDir: "{app}\uninstall"; Flags: ignoreversion
 
 [Icons]
-Name: "{autoprograms}\Pomme"; Filename: "{app}\pomme-client.exe"
-Name: "{autodesktop}\Pomme"; Filename: "{app}\pomme-client.exe"; Tasks: desktopicon
+Name: "{autoprograms}\Pemozone"; Filename: "{app}\pomme-client.exe"
+Name: "{autodesktop}\Pemozone"; Filename: "{app}\pomme-client.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\pomme-client.exe"; Description: "{cm:LaunchProgram,Pomme}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\pomme-client.exe"; Description: "{cm:LaunchProgram,Pemozone}"; Flags: nowait postinstall skipifsilent
 
 ; What the updater, the unpacked natives and releases from before OpenAL was
-; embedded leave behind; the rest of the data folder (%LOCALAPPDATA%\Pomme)
+; embedded leave behind; the rest of the data folder (%LOCALAPPDATA%\Pemozone)
 ; stays.
 [UninstallDelete]
 Type: files; Name: "{app}\*.old"
 Type: files; Name: "{app}\OpenAL*"
 Type: filesandordirs; Name: "{app}\.pomme-update"
-Type: filesandordirs; Name: "{localappdata}\Pomme\natives"
+Type: filesandordirs; Name: "{localappdata}\Pemozone\natives"

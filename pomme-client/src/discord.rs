@@ -5,11 +5,11 @@ const DISCORD_CLIENT_ID: &str = "1489624876909330452";
 
 fn base_activity(version: &str) -> Activity<'static> {
     Activity::new()
-        .details(format!("Pomme Client — {version}"))
+        .details(format!("Pemozone Client — {version}"))
         .assets(
             Assets::new()
                 .large_image("green-apple")
-                .large_text("Pomme Client"),
+                .large_text("Pemozone Client"),
         )
 }
 

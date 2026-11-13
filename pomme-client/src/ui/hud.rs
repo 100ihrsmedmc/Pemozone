@@ -1668,7 +1668,7 @@ pub fn build_debug_overlay(columns: &mut DebugColumns, info: &DebugInfo<'_>) {
     let cz = bz.div_euclid(16);
 
     let mut left_lines: Vec<String> = vec![
-        "Pomme".to_owned(),
+        "Pemozone".to_owned(),
         String::new(),
         format!("XYZ: {:.3} / {:.5} / {:.3}", pos.x, pos.y, pos.z),
         format!("Block: {} {} {}", bx, by, bz),

@@ -37,7 +37,7 @@ pub enum ContextError {
     Loader(#[from] pyronyx::LoadError),
 }
 
-const VK_APP_NAME: &CStr = c"Pomme";
+const VK_APP_NAME: &CStr = c"Pemozone";
 const VK_APP_VERSION: u32 = vk::make_api_version(0, 0, 1, 0);
 const VK_ENGINE_NAME: &CStr = c"Pomme Engine";
 const VK_ENGINE_VERSION: u32 = vk::make_api_version(0, 0, 1, 0);

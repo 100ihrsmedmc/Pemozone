@@ -26,14 +26,14 @@ from pathlib import Path
 
 from fetch_openal import REPO_ROOT
 
-BUNDLE = "com.pommemc.client"
-PROJECT = REPO_ROOT / "pomme-ios" / "Pomme.xcodeproj"
+BUNDLE = "com.pemozone.client"
+PROJECT = REPO_ROOT / "pomme-ios" / "Pemozone.xcodeproj"
 BUILD_DIR = REPO_ROOT / "target" / "ios-build"
-ARCHIVE = BUILD_DIR / "Pomme.xcarchive"
-DESKTOP_MINECRAFT = Path.home() / "Library" / "Application Support" / "Pomme" / "minecraft"
+ARCHIVE = BUILD_DIR / "Pemozone.xcarchive"
+DESKTOP_MINECRAFT = Path.home() / "Library" / "Application Support" / "Pemozone" / "minecraft"
 # Inside the app's data container.
 LAUNCH_FILE = "Documents/launch.txt"
-MINECRAFT_DIR = "Library/Application Support/Pomme/minecraft"
+MINECRAFT_DIR = "Library/Application Support/Pemozone/minecraft"
 
 
 def run(*args, **kwargs):
@@ -49,7 +49,7 @@ def xcodebuild(sdk, *args):
     run(
         "xcodebuild", "-quiet",
         "-project", PROJECT,
-        "-scheme", "Pomme",
+        "-scheme", "Pemozone",
         "-sdk", sdk,
         "-derivedDataPath", BUILD_DIR,
         "-destination", destination,
@@ -101,7 +101,7 @@ def device(team):
     xcodebuild("iphoneos", "-allowProvisioningUpdates", f"DEVELOPMENT_TEAM={team}", "build")
     target = device_id()
     run("xcrun", "devicectl", "device", "install", "app", "--device", target,
-        BUILD_DIR / "Build" / "Products" / "Debug-iphoneos" / "Pomme.app")
+        BUILD_DIR / "Build" / "Products" / "Debug-iphoneos" / "Pemozone.app")
     run("xcrun", "devicectl", "device", "process", "launch", "--device", target,
         "--terminate-existing", "--console", BUNDLE)
 
@@ -110,7 +110,7 @@ def sim():
     generate_project()
     xcodebuild("iphonesimulator", "build")
     run("xcrun", "simctl", "install", "booted",
-        BUILD_DIR / "Build" / "Products" / "Debug-iphonesimulator" / "Pomme.app")
+        BUILD_DIR / "Build" / "Products" / "Debug-iphonesimulator" / "Pemozone.app")
     run("xcrun", "simctl", "launch", "--console-pty", "--terminate-running-process", "booted", BUNDLE)
 
 
@@ -131,7 +131,7 @@ def archive(team):
     xcodebuild("iphoneos", "-configuration", "Release", "-allowProvisioningUpdates",
                f"DEVELOPMENT_TEAM={team}", "archive", "-archivePath", ARCHIVE)
     export(team, "export")
-    print(f"exported {BUILD_DIR / 'export' / 'Pomme.ipa'}")
+    print(f"exported {BUILD_DIR / 'export' / 'Pemozone.ipa'}")
 
 
 def export(team, destination):

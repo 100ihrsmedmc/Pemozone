@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:label="Pomme"
+        android:label="Pemozone"
         android:hasCode="false"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
         <activity

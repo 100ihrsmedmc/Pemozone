@@ -1,116 +1,230 @@
 <p align="center">
-  <h1 align="center">Pomme</h1>
-  <p align="center">A high-performance Minecraft: Java Edition client, written from scratch in Rust and Vulkan</p>
+  <img width="160" alt="Pemozone" src="./pomme-ios/Assets.xcassets/AppIcon.appiconset/icon-1024.png" />
+  <h1 align="center">Pemozone</h1>
+  <p align="center">An iOS and iPadOS Minecraft: Java Edition client with a focus on touch controls</p>
   <p align="center">
-    <a href="https://github.com/PommeMC/Client/actions/workflows/ci.yml"><img src="https://github.com/PommeMC/Client/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+    <img src="https://img.shields.io/badge/platform-iOS%20%7C%20iPadOS-2A2470" alt="iOS and iPadOS">
     <img src="https://img.shields.io/badge/Minecraft-1.20%20to%2026.3-5D9C3F" alt="Minecraft 1.20 to 26.3">
-    <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-2A2470" alt="Windows, macOS and Linux">
+    <img src="https://img.shields.io/badge/engine-Pomme%20(Rust)-DEA584" alt="Pomme Rust engine">
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue" alt="GPL-3.0 license"></a>
   </p>
   <p align="center">
-    <a href="#download"><b>Download</b></a> · <a href="https://discord.gg/ucBA55bHPR"><b>Discord</b></a> · <a href="./BUILDING.md"><b>Build from source</b></a> · <a href="./CONTRIBUTING.md"><b>Contributing</b></a>
+    <a href="#building-and-installing-on-ios"><b>Build for iOS</b></a> ·
+    <a href="./BUILDING.md"><b>Building</b></a> ·
+    <a href="#credits-and-acknowledgements"><b>Credits</b></a> ·
+    <a href="./THIRD_PARTY_LICENSES.md"><b>Licenses</b></a>
   </p>
 </p>
 
 ---
 
-Pomme contains no Mojang code, and joins vanilla servers from 1.20 through 26.3.
+## What Pemozone is
 
-<p align="center">
-  <img width="100%" alt="Pomme flying over a jungle" src="https://github.com/user-attachments/assets/c35e717e-3535-4f4f-9539-9e62dd482e04" />
-</p>
+Pemozone is an independent, community-built **Minecraft: Java Edition client for
+iPhone and iPad (iOS/iPadOS 16 and later)**. It connects to vanilla Java Edition
+servers and, like the engine underneath it, contains no Mojang code.
 
-## Download
+Pemozone is built on the **Pomme Rust engine** — a high-performance Minecraft
+client written from scratch in Rust, rendering through Vulkan (MoltenVK on
+Apple platforms). Pemozone takes that engine and focuses its work on the mobile
+experience: a touch-control system that you can arrange, resize and fade to suit
+the way you play.
 
-Get Pomme from the [latest release](https://github.com/PommeMC/Client/releases/latest):
+> [!IMPORTANT]
+> Pemozone is an **independent community project**. It is **not** an official
+> release of Pomme, and it is **not** affiliated with, endorsed by, or produced
+> by the Horizon project. Pemozone reuses and adapts open-source code from both;
+> the credits and licenses below say exactly what came from where.
 
-- **Windows x64**: `pomme-client-windows-x64-setup.exe`
-- **macOS (Apple Silicon)**: `pomme-client-macos-arm64.dmg`, then drag Pomme to Applications
-- **Linux x64**: `pomme-client-linux-x64-gnu.AppImage`
+## Why Pemozone exists
 
-It signs you in with your Microsoft account and keeps itself up to date. You
-need to own Minecraft: Java Edition. The builds aren't signed yet, so the first
-launch needs one extra step, described in the release notes.
+Playing Minecraft: Java Edition on a phone or tablet has always meant
+compromising on input. Vanilla's mobile story lives on Bedrock, not Java, and the
+Java clients that do run on iOS tend to ship a fixed set of on-screen buttons
+that you cannot move, cannot resize, and cannot see through when the screen gets
+busy.
 
-Early Android and iOS builds build from source: see [BUILDING.md](./BUILDING.md).
+Pemozone exists to close that gap for Java Edition on iOS:
 
-## Why Pomme?
+- **A layout you control.** Every touch control can be moved, resized and faded,
+  with a live editor that shows the result as you change it.
+- **Controls that survive restarts.** Your layout is saved and restored, so you
+  set it up once.
+- **A control scheme designed for touch first.** The interaction model is
+  inspired by the concepts explored in [Horizon iOS](https://github.com/Kelly-Inc/horizon-ios),
+  a separate MIT-licensed Minecraft Java client for iOS.
 
-- **No JVM**: a native binary, so there's no Java to install or tune.
-- **Vanilla behaviour**: physics, rendering, menus and networking are ported line
-  by line from the decompiled game, and checked against it.
-- **Tested against real servers**: scripted [in-game tests](./tests/ingame/README.md)
-  run the client against a vanilla 26.2 server and screenshot the results.
-- **Many versions, one client**: per-version protocol tables are generated from
-  each version's decompiled source, and other versions are translated to 26.2.
+## Technical foundation
 
-> [!WARNING]
-> Pomme is in active development. Expect missing features and bugs, and please
-> report them in [Issues](https://github.com/PommeMC/Client/issues) or on Discord.
+Pemozone does **not** contain a new engine. Its client, renderer, protocol
+layer, networking, audio and world logic come from the **Pomme engine**
+(GPL-3.0-or-later). Pemozone's own contribution is concentrated in the mobile
+touch layer and the iOS packaging around it.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                        Pemozone (this repo)                    │
+│  iOS/iPadOS app  ·  touch layout + editor  ·  packaging        │
+├──────────────────────────────────────────────────────────────┤
+│                    Pomme engine  (GPL-3.0-or-later)            │
+│  Rust client core · renderer (Vulkan/MoltenVK) · protocol ·    │
+│  networking · audio (OpenAL Soft) · singleplayer (SteelMC)     │
+├──────────────────────────────────────────────────────────────┤
+│  Upstream Rust crates: azalea · ash · winit · naga · glam · …  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+The touch-layout **design** (data-driven placements, normalized coordinates, and
+the drag/resize/fade editor) follows the MIT-licensed touch layout and editor in
+Horizon iOS. The Pemozone implementation is written in this repository and keeps
+Horizon's MIT notice — see [Credits](#credits-and-acknowledgements) and
+[THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md).
 
 ## Features
 
-- **Rendering**: chunk meshing, GPU frustum and cave-occlusion culling, smooth lighting, water and lava, mobs with skins, particles, weather, clouds and sky
-- **Singleplayer**: worlds run on [SteelMC](https://github.com/Steel-Foundation/SteelMC), a Rust server embedded in the client
-- **Audio**: vanilla sound events, music and subtitles through OpenAL Soft
-- **Resource packs**: local and server-sent packs, applied live
-- **Inventories**: survival and creative inventories, crafting, furnaces, anvils, enchanting, chests, bundles and the recipe book
-- **Controls**: rebindable keys and controllers on desktop, touch controls on phones
-- **Friends**: the Minecraft friends list, requests and who's online
-- **Updates**: installs per platform and keeps itself up to date
+These are the capabilities present in the code at this version. See
+[Development status and limitations](#development-status-and-limitations) for
+what has and has not been verified on real hardware.
 
-<details>
-<summary>Everything else</summary>
+1. **Customizable touch-control layout** — the on-screen joystick and action
+   buttons are data, not fixed constants, so each control can be placed
+   independently.
+2. **Dragging and resizing touch controls** — a full-screen **Touch Layout**
+   editor (Options → Controls → Touch Layout) previews the live controls and lets
+   you drag one to move it, select it, and adjust its size and opacity, plus a
+   global size.
+3. **Touch layout persistence** — the layout is written to `touch_layout.json`
+   next to the other settings and restored on the next launch, atomically, so an
+   interrupted save cannot corrupt it.
+4. **Inventory and container closing behavior** — a touch player can close the
+   inventory, a container or the creative screen from the same corner that opens
+   them; Escape and `Action::Close` route through the same per-screen close path.
+5. **Optional built-in resource packs** — vanilla's optional built-in packs
+   (for example `programmer_art` and `high_contrast`) are discovered from the
+   installation's asset index and offered on the resource-pack screen, with their
+   enabled/disabled state kept across reloads.
+6. **Audio support** — vanilla sound events, music and subtitles through
+   OpenAL Soft, embedded as `soft_oal.framework` on iOS.
+7. **Shader compatibility** — the renderer loads shader packs, with the
+   per-version program set and the sky/horizon stages that packs rely on.
+8. **Multiplayer and local-network permissions** — the iOS app declares the
+   local-network usage description and allows local networking, so a LAN world
+   or a self-hosted server can be reached and the system prompt appears.
+9. **ProMotion support** — the iOS app opts out of the default 60 Hz minimum
+   frame duration on ProMotion displays (iPhone 13 Pro and later, iPad Pro), so
+   higher frame-rate settings can be reached where the display supports them.
 
-- Vanilla-exact movement, collision, swimming and drowning
-- Block entities, dropped items, block overlays and hand animation
-- HUD and menus: health, hunger, air, status effects, hotbar, boss bars, titles, waypoints, advancement toasts, player list, F3 debug, chat, pause menu, options, server list, world list
-- Create, edit and delete singleplayer worlds from the menu
-- Microsoft sign-in from the menu, with tokens stored in the OS keyring
-- Secure chat: signed messages, as vanilla sends them
-- Discord presence for the menu, servers and worlds
+## Supported platforms and Minecraft versions
 
-</details>
+| Area | Support | How it was verified |
+| --- | --- | --- |
+| Platform | iOS 16+ / iPadOS 16+, **arm64** | iOS deployment target and `ARCHS: arm64` in `pomme-ios/project.yml` |
+| Devices | iPhone and iPad (`TARGETED_DEVICE_FAMILY = 1,2`) | `pomme-ios/project.yml` |
+| Rendering | Vulkan via MoltenVK (static) | `pomme-ios/build-app.sh`, `tools/fetch_moltenvk.py` |
+| Minecraft | **1.20 through 26.3**; native wire version **26.2** (protocol 776) | `pomme-protocol/src/version.rs` (`VERSIONS`, `NATIVE`, `TRANSLATED`) |
+| Audio | OpenAL Soft | `tools/build_openal.py`, `pomme-client/src/audio` |
 
-## Building from source
+Other listed Java versions are joined by translating their wire format to 26.2;
+`pomme-protocol`'s `joinable()` decides which a server may speak. The desktop
+build of the same engine also targets Windows, macOS and Linux, but Pemozone's
+focus and packaging are iOS/iPadOS.
 
-See [BUILDING.md](./BUILDING.md) for building the client, running
-the client standalone, and the development commands.
+## Building and installing on iOS
 
-## Contributing
+An unsigned IPA built by GitHub Actions is published on this repository's
+[Releases](../../releases) page. It is **unsigned** — to run it on a device you
+must sign it with your own Apple Developer team (or build from source), which
+also means the first install is a manual, sideloading-style step rather than an
+App Store install.
 
-Contributions are welcome.
-Please open an issue first to discuss what you'd like to change, and see
-[CONTRIBUTING.md](./CONTRIBUTING.md) for the workflow.
+### Build from source
+
+Requirements: macOS with Xcode, plus:
+
+```sh
+brew install xcodegen cmake
+rustup target add aarch64-apple-ios aarch64-apple-ios-sim
+```
+
+Generate the Xcode project from `pomme-ios/project.yml` and build:
+
+```sh
+cd pomme-ios && xcodegen generate
+```
+
+Then, with your Apple Developer team id (Membership on developer.apple.com, or
+Xcode → Settings → Accounts):
+
+```sh
+just ios-device <team-id>     # build, sign, install and run on a paired device
+just ios-sim                  # the booted simulator (starts, cannot render yet)
+just ios-archive <team-id>    # Release archive and an App Store .ipa
+```
+
+The first build downloads MoltenVK and compiles OpenAL Soft; on first launch the
+app downloads the game's assets (about 500 MB) or you can push a desktop
+install's assets with `just ios-push-assets`. See
+[pomme-ios/README.md](./pomme-ios/README.md) and [BUILDING.md](./BUILDING.md) for
+the full detail, including the `launch.txt` flags the app reads.
+
+### Continuous integration
+
+`.github/workflows/ios-build.yml` builds an unsigned IPA on a macOS runner
+(`xcodebuild`, `CODE_SIGNING_ALLOWED=NO`) and attaches it to a build release. It
+also runs on demand via **workflow_dispatch**.
+
+## Development status and limitations
+
+Pemozone is in **active, early development**. Treat it as a work in progress.
+
+- **Device testing.** The code in this repository has been **reviewed and covered
+  by automated tests**, and the iOS app is built by CI, but the touch-layout and
+  the ProMotion / local-network changes have **not been verified on a physical
+  iPad or iPhone** by this project. Do not assume a feature works on a device
+  until it has been tested on one.
+- **Signing.** CI produces an **unsigned** IPA; it will not install until it is
+  signed with your own team.
+- **Simulator.** The iOS simulator builds and starts but **cannot render**: its
+  GPU lacks `drawIndirectFirstInstance`, which the chunk renderer needs. Use a
+  device.
+- **Singleplayer.** The integrated server (SteelMC) is compiled in for the
+  client, but the mobile build follows the mobile configuration; verify
+  singleplayer behavior on your target before relying on it.
+- **HUD safe area.** The HUD does not yet account for the notch and rounded
+  corners, so its edges can be covered on some devices.
+- **Minecraft versions.** Joined versions are limited to those with a complete
+  wire translation to the native 26.2 protocol.
+
+## Credits and acknowledgements
+
+Pemozone would not exist without these projects. Full license texts and notices
+are in [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md).
+
+- **Pomme** — the Rust Minecraft client engine Pemozone is built on.
+  Source: <https://github.com/100ihrsmedmc/Client> (GPL-3.0-or-later).
+  Pemozone is a derivative work of Pomme and keeps Pomme's GPL-3.0 license and
+  copyright notices.
+- **Horizon iOS** — Pemozone's touch-layout model and editor are adapted from
+  concepts in Horizon's MIT-licensed touch layout.
+  Source: <https://github.com/Kelly-Inc/horizon-ios> (MIT). Horizon's MIT notice
+  is preserved.
+- **SteelMC** — the embedded singleplayer server linked by `pomme-singleplayer`
+  (AGPL-3.0-or-later).
+- **azalea, ash, winit, naga, glam, gpu-allocator, binary-greedy-meshing,
+  OpenAL Soft, MoltenVK, the Vulkan Loader** and the other crates and libraries
+  listed in [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md).
+
+Pemozone is an independent project and is not an official release of Pomme or
+Horizon. Pemozone is not affiliated with or endorsed by Mojang Studios or
+Microsoft. Minecraft is a trademark of Mojang Studios. Pemozone contains no
+Mojang code; you must own Minecraft: Java Edition to sign in and play.
 
 ## License
 
-Pomme is licensed under the [GNU General Public License v3.0 or later](./LICENSE)
-(GPL-3.0-or-later). Copyright (C) 2026 Purdze.
+Pemozone is distributed under the **GNU General Public License v3.0 or later**
+(GPL-3.0-or-later), inherited from the Pomme engine it is built on. See
+[LICENSE](./LICENSE). Because the client links SteelMC through
+`pomme-singleplayer`, that crate is AGPL-3.0-or-later.
 
-`pomme-singleplayer` links [SteelMC](./third_party/SteelMC) and is therefore
-AGPL-3.0-or-later. The [allocator crate](./pomme-gpu-allocator) is MIT, a port
-of the [gpu-allocator crate](https://github.com/Traverse-Research/gpu-allocator)
-by Traverse Research, and [pomme-block](./pomme-block) is likewise MIT. See
-[THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md) for the other third-party code.
-
-Pomme is not affiliated with or endorsed by Mojang Studios or Microsoft.
-Minecraft is a trademark of Mojang Studios.
-
-## Community
-
-[![Discord](https://img.shields.io/discord/1483578136544280618?color=5865F2&label=Discord&logo=discord&logoColor=white)](https://discord.gg/ucBA55bHPR)
-[![Sponsor](https://img.shields.io/badge/Sponsor-Purdze-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/Purdze)
-
-<details>
-<summary>Star history</summary>
-
-<a href="https://www.star-history.com/?repos=PommeMC%2FClient&type=date&logscale=&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=PommeMC/Client&type=date&theme=dark&logscale&legend=top-left&sealed_token=r7ib_n7xrIE4aUaRqlz9KCFjr5-Cpocxw6LPtk06-CcFfxLAEjzgPfz5bSzzGcSnbhRnkbN6KwRem4jwXnRJzcsuZYIZX5tyIAmYKFIc60c_2HBXRhGHA4rlvmyr2MXfeZDe2thqz-maf8Tdh5FxHAWJUFflGQP1JjoIfbyUZ0GW6pMxxJ8qfga5eta0" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=PommeMC/Client&type=date&logscale&legend=top-left&sealed_token=r7ib_n7xrIE4aUaRqlz9KCFjr5-Cpocxw6LPtk06-CcFfxLAEjzgPfz5bSzzGcSnbhRnkbN6KwRem4jwXnRJzcsuZYIZX5tyIAmYKFIc60c_2HBXRhGHA4rlvmyr2MXfeZDe2thqz-maf8Tdh5FxHAWJUFflGQP1JjoIfbyUZ0GW6pMxxJ8qfga5eta0" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=PommeMC/Client&type=date&logscale&legend=top-left&sealed_token=r7ib_n7xrIE4aUaRqlz9KCFjr5-Cpocxw6LPtk06-CcFfxLAEjzgPfz5bSzzGcSnbhRnkbN6KwRem4jwXnRJzcsuZYIZX5tyIAmYKFIc60c_2HBXRhGHA4rlvmyr2MXfeZDe2thqz-maf8Tdh5FxHAWJUFflGQP1JjoIfbyUZ0GW6pMxxJ8qfga5eta0" />
- </picture>
-</a>
-
-</details>
+Corresponding source for every released binary is available in this repository
+at the released tag.

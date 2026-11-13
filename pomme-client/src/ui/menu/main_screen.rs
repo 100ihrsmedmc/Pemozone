@@ -146,17 +146,17 @@ impl MainMenu {
         });
         cy += accent_bar_h + 14.0 * s;
 
-        let pomme_w = text_width_fn("Pomme", title_size);
+        let wordmark_w = text_width_fn("Pemozone", title_size);
         elements.push(MenuElement::Text {
             x: btn_x,
             y: cy,
-            text: "Pomme".into(),
+            text: "Pemozone".into(),
             scale: title_size,
             color: COL_WORDMARK,
             centered: false,
         });
 
-        let sub_x = btn_x + pomme_w + 8.0 * s;
+        let sub_x = btn_x + wordmark_w + 8.0 * s;
         let sub_y1 = cy + title_size - sub_size * 2.0 - 4.0 * s;
         let sub_y2 = cy + title_size - sub_size - 1.0 * s;
         let badge_t = ((anim_t - 2.0) / 0.3).clamp(0.0, 1.0);
@@ -465,7 +465,7 @@ impl MainMenu {
             color: footer_col,
             centered: false,
         });
-        let copy = format!("Pomme {}", crate::update::version());
+        let copy = format!("Pemozone {}", crate::update::version());
         let copy_w = text_width_fn(&copy, footer_size);
         elements.push(MenuElement::Text {
             x: screen_w - footer_pad - copy_w,

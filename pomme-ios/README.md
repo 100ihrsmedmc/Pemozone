@@ -1,10 +1,10 @@
 # iOS
 
-An early port: the client runs on iPhone and iPad (iOS 16+), signs in with a
-Microsoft account, downloads the game's assets on first launch (about 500 MB)
-and plays with the same touch controls as Android. All of it is Rust: the app's
-executable is the `pomme-ios` binary, and the Xcode project only packages and
-signs it.
+Pemozone's iPhone and iPad app (iOS 16+). The client runs on device, signs in
+with a Microsoft account, downloads the game's assets on first launch (about
+500 MB) and plays with the same touch controls as Android — here with a layout
+you can move, resize and fade. All of it is Rust: the app's executable is the
+`pomme-ios` binary, and the Xcode project only packages and signs it.
 
 ## Setup
 
@@ -15,14 +15,14 @@ brew install xcodegen cmake
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim
 ```
 
-`project.yml` is the Xcode project; `just ios-*` generates `Pomme.xcodeproj`
+`project.yml` is the Xcode project; `just ios-*` generates `Pemozone.xcodeproj`
 from it. The first build downloads MoltenVK (`tools/fetch_moltenvk.py`, the
 Vulkan driver, linked in statically) and compiles OpenAL Soft
 (`tools/build_openal.py`, embedded as `soft_oal.framework`).
 
 Signing uses your Apple Developer team: its id is under Membership on
 developer.apple.com, or in Xcode's Settings → Accounts. Xcode creates the
-profile for `com.pommemc.client` the first time. The device needs Developer
+profile for `com.pemozone.client` the first time. The device needs Developer
 Mode on (Settings → Privacy & Security).
 
 ## Running
@@ -40,16 +40,16 @@ just ios-config --version 26.2 --username Tester \
 `launch.txt` (what `ios-config` writes, in the app's Documents) holds the same
 flags the desktop client takes. The data folder (laid out as on desktop:
 `minecraft/`, `profiles/` and so on) is the app's `Library/Application
-Support/Pomme`; `minecraft/` and the cache are kept out of iCloud backups.
+Support/Pemozone`; `minecraft/` and the cache are kept out of iCloud backups.
 
 ## TestFlight
 
 ```sh
-just ios-archive <team>                     # target/ios-build/export/Pomme.ipa
+just ios-archive <team>                     # target/ios-build/export/Pemozone.ipa
 just ios-upload <team>                      # to App Store Connect
 ```
 
-The upload needs an App Store Connect app for `com.pommemc.client`. Bump
+The upload needs an App Store Connect app for `com.pemozone.client`. Bump
 `CURRENT_PROJECT_VERSION` in `project.yml` for each upload.
 
 ## Signing in
@@ -60,9 +60,20 @@ in the iOS Keychain and is restored on the next launch.
 
 ## Controls
 
-The Android ones: drag on the left to move, drag elsewhere to look, tap to use
-or place, hold still to break; buttons for jump, chat, inventory and pause.
-There's no Back key, so the pause button is the way out of the world.
+Drag on the left to move, drag elsewhere to look, tap to use or place, hold
+still to break; buttons for jump, chat, inventory and pause. There's no Back
+key, so the pause button is the way out of the world, and a close button rests
+where the pause button does so any screen the touch overlay can dismiss has a
+way out.
+
+### Touch layout
+
+Options → Controls → Touch Layout opens a full-screen editor that previews the
+live controls. Drag a control to move it, tap one to select it, and use the
+sliders to change its size and opacity (plus a global size). **Reset** restores
+the built-in layout; **Save** persists it to `touch_layout.json` next to the
+other settings, and **Done** saves and returns. An untouched layout draws and
+behaves exactly as before.
 
 ## Limitations
 
@@ -71,3 +82,5 @@ There's no Back key, so the pause button is the way out of the world.
 - No singleplayer: the embedded server is off, as on Android.
 - The HUD ignores the safe area, so the notch and rounded corners can cover
   its edges.
+- The touch layout and the ProMotion / local-network changes have not been
+  verified on a physical device by this project yet.

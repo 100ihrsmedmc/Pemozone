@@ -89,7 +89,7 @@ android-run:
 
 # Copies a desktop install's `minecraft/` assets and version files into the
 # app's own storage, through a staging dir `run-as` can read.
-android-push-assets src=(home_directory() / "Library/Application Support/Pomme/minecraft"):
+android-push-assets src=(home_directory() / "Library/Application Support/Pemozone/minecraft"):
     #!/usr/bin/env bash
     set -e
     stage=/data/local/tmp/pomme

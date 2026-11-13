@@ -1478,7 +1478,7 @@ impl GameState {
             _ if bindings.matches(Action::DebugDumpVersion, &input) => {
                 self.debug_feedback("Client version info:");
                 self.chat.push_message(vec![crate::ui::text::TextSpan::new(
-                    format!("Pomme Client {}", env!("CARGO_PKG_VERSION")),
+                    format!("Pemozone Client {}", env!("CARGO_PKG_VERSION")),
                     [1.0, 1.0, 1.0, 1.0],
                 )]);
                 true

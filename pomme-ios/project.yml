@@ -1,7 +1,7 @@
-# XcodeGen spec for the iOS app (`just ios-project` generates Pomme.xcodeproj).
+# XcodeGen spec for the iOS app (`just ios-project` generates Pemozone.xcodeproj).
 # The app has no sources of its own: its executable is the `pomme-ios` Rust
 # binary, which build-app.sh builds and copies in.
-name: Pomme
+name: Pemozone
 options:
   deploymentTarget:
     iOS: "16.0"
@@ -13,7 +13,7 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
 targets:
-  Pomme:
+  Pemozone:
     type: application
     platform: iOS
     sources:
@@ -21,14 +21,14 @@ targets:
     info:
       path: Info.plist
       properties:
-        CFBundleDisplayName: Pomme
+        CFBundleDisplayName: Pemozone
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen: {}
         UIRequiresFullScreen: true
         UIStatusBarHidden: true
         # ProMotion displays (iPhone 13 Pro and later, iPad Pro) hold an app to
-        # a 60 Hz minimum frame duration unless it opts out. Pomme's Max
+        # a 60 Hz minimum frame duration unless it opts out. Pemozone's Max
         # Framerate setting goes up to 120, so without this it could never be
         # reached. Horizon's iOS plist sets it too.
         CADisableMinimumFrameDurationOnPhone: true
@@ -43,14 +43,14 @@ targets:
         # on the LAN, and blocks plain http to a LAN address without this. Both
         # are needed to join a LAN world or a self-hosted server over the
         # network; internet servers use https and need neither.
-        NSLocalNetworkUsageDescription: Pomme joins Minecraft servers and LAN worlds on your network.
+        NSLocalNetworkUsageDescription: Pemozone joins Minecraft servers and LAN worlds on your network.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         ITSAppUsesNonExemptEncryption: false
     settings:
       base:
-        PRODUCT_NAME: Pomme
-        PRODUCT_BUNDLE_IDENTIFIER: com.pommemc.client
+        PRODUCT_NAME: Pemozone
+        PRODUCT_BUNDLE_IDENTIFIER: com.pemozone.client
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
