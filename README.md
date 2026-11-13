@@ -183,10 +183,10 @@ also runs on demand via **workflow_dispatch**.
 Pemozone is in **active, early development**. Treat it as a work in progress.
 
 - **Device testing.** The code in this repository has been **reviewed and covered
-  by automated tests**, and the iOS app is built by CI, but the touch-layout and
-  the ProMotion / local-network changes have **not been verified on a physical
-  iPad or iPhone** by this project. Do not assume a feature works on a device
-  until it has been tested on one.
+  by automated tests**, and the iOS app is built by CI, but the touch-layout
+  (including the custom buttons), the ProMotion and the local-network changes
+  have **not been verified on a physical iPad or iPhone** by this project. Do not
+  assume a feature works on a device until it has been tested on one.
 - **Signing.** CI produces an **unsigned** IPA; it will not install until it is
   signed with your own team.
 - **Simulator.** The iOS simulator builds and starts but **cannot render**: its
