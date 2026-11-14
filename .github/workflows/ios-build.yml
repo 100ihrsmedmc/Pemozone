@@ -151,9 +151,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="ios-build-${GITHUB_RUN_ID}"
+          TAG="v3.0.0-build-${GITHUB_RUN_NUMBER}"
           gh release create "$TAG" Pemozone-unsigned.ipa \
             --repo "$GITHUB_REPOSITORY" \
-            --title "Pemozone iOS Build #${GITHUB_RUN_NUMBER}" \
-            --notes "Experimental iOS build produced by GitHub Actions.\n\n- Build: successful\n- Platform: iOS / Apple Silicon\n- Status: Unsigned IPA (not code-signed)." \
+            --title "Pemozone 3.0 (build #${GITHUB_RUN_NUMBER})" \
+            --notes "Pemozone 3.0: the Touch Layout editor now has a Hide / Show button so the panel never covers the controls you are placing.\n\nExperimental iOS build produced by GitHub Actions.\n\n- Build: successful\n- Platform: iOS / Apple Silicon\n- Status: Unsigned IPA (not code-signed)." \
             --prerelease

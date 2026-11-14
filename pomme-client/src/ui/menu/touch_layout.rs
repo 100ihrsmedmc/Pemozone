@@ -31,6 +31,9 @@ pub struct TouchEditor {
     pub(super) rename_field: Option<TextFieldState>,
     /// The custom button `rename_field` edits.
     rename_index: Option<usize>,
+    /// Whether the floating panel is collapsed to a small Show button, so the
+    /// whole screen is free for dragging controls.
+    panel_hidden: bool,
 }
 
 impl TouchEditor {
@@ -100,6 +103,7 @@ impl MainMenu {
         key_bindings: &KeyBindings,
     ) -> MainMenuResult {
         if input.escape {
+            self.touch_editor.panel_hidden = false;
             self.set_screen(Screen::OptionsControls, key_bindings);
             return empty_result();
         }
@@ -125,7 +129,7 @@ impl MainMenu {
         // The panel's geometry, so a press on it doesn't also grab a control.
         let btn_w = BTN_W * gs;
         let gap = 4.0 * gs;
-        let row_w = btn_w * 3.0 + gap * 2.0;
+        let row_w = btn_w * 4.0 + gap * 3.0;
         let slider_w = SLIDER_W * gs;
         let add_w = 56.0 * gs;
         let del_w = 56.0 * gs;
@@ -140,7 +144,16 @@ impl MainMenu {
         let custom_y = custom_row_y(gs, fs);
         let sliders_y = sliders_top(gs, fs);
         let panel_bottom = sliders_y + 3.0 * SLIDER_PITCH * gs + 6.0 * gs;
-        let panel_rect = [panel_x, panel_y, panel_w, panel_bottom - panel_y];
+        // When the panel is hidden, the only thing that blocks a drag is the
+        // small Show button at the top centre.
+        let hidden = self.touch_editor.panel_hidden;
+        let show_w = 64.0 * gs;
+        let show_rect = [cx - show_w / 2.0, panel_y, show_w, btn_h];
+        let panel_rect = if hidden {
+            show_rect
+        } else {
+            [panel_x, panel_y, panel_w, panel_bottom - panel_y]
+        };
 
         // Drag a control: grab on press over one, follow the pointer, drop on
         // release. A press on the panel is not a grab.
@@ -194,6 +207,37 @@ impl MainMenu {
             &layout,
             &TouchControls::default(),
         );
+
+        // Hidden: draw only a Show button, so the controls can be placed
+        // anywhere on screen. Tapping Show brings the panel back.
+        if hidden {
+            self.focus_advance(input);
+            let mut ctx = self.make_focus_ctx(input);
+            let show = push_button_f(
+                &mut elements,
+                &mut ctx,
+                &mut any_hovered,
+                cursor,
+                input.clicked,
+                show_rect[0],
+                show_rect[1],
+                show_rect[2],
+                show_rect[3],
+                gs,
+                "Show",
+                true,
+            );
+            if show {
+                self.touch_editor.panel_hidden = false;
+            }
+            self.finish_focus(&ctx);
+            return MainMenuResult {
+                elements,
+                action: MenuAction::None,
+                cursor_pointer: any_hovered,
+                clicked_button: ctx.fired,
+            };
+        }
 
         // The floating panel: a translucent backing, the title, then widgets.
         elements.push(MenuElement::Rect {
@@ -261,7 +305,26 @@ impl MainMenu {
             "Done",
             true,
         );
+        bx += btn_w + gap;
+        let hide = push_button_f(
+            &mut elements,
+            &mut ctx,
+            &mut any_hovered,
+            cursor,
+            input.clicked,
+            bx,
+            row_y,
+            btn_w,
+            btn_h,
+            gs,
+            "Hide",
+            true,
+        );
 
+        if hide {
+            self.touch_editor.panel_hidden = true;
+            self.touch_editor.end_rename();
+        }
         if reset {
             self.touch_layout.reset_all();
             self.touch_layout_dirty = true;
@@ -273,6 +336,7 @@ impl MainMenu {
             self.flush_settings(key_bindings);
         }
         if done {
+            self.touch_editor.panel_hidden = false;
             self.flush_settings(key_bindings);
             self.set_screen(Screen::OptionsControls, key_bindings);
         }
@@ -730,12 +794,12 @@ mod tests {
         menu.touch_layout.set_scale(1.8);
         assert_ne!(menu.touch_layout, TouchLayoutSettings::default());
 
-        // The Reset button is the leftmost of the three; click its centre.
+        // The Reset button is the leftmost of the four; click its centre.
         let gs = menu.gui_scale(SW, SH);
         let fs = common::FONT_SIZE * gs;
         let btn_w = BTN_W * gs;
         let gap = 4.0 * gs;
-        let row_w = btn_w * 3.0 + gap * 2.0;
+        let row_w = btn_w * 4.0 + gap * 3.0;
         let btn_h = common::BTN_H * gs;
         let panel_y = 4.0 * gs;
         let row_y = panel_y + 4.0 * gs + fs + 8.0 * gs;
@@ -744,6 +808,38 @@ mod tests {
 
         assert_eq!(menu.touch_layout, TouchLayoutSettings::default());
         assert_eq!(menu.touch_editor.selected, None);
+    }
+
+    #[test]
+    fn hide_collapses_the_panel_and_show_restores_it() {
+        let dir = std::env::temp_dir().join(format!("pomme-editor-hide-{}", std::process::id()));
+        let (mut menu, kb) = editor(dir.to_str().unwrap());
+        let gs = menu.gui_scale(SW, SH);
+        let fs = common::FONT_SIZE * gs;
+        let btn_w = BTN_W * gs;
+        let gap = 4.0 * gs;
+        let row_w = btn_w * 4.0 + gap * 3.0;
+        let btn_h = common::BTN_H * gs;
+        let row_y = 4.0 * gs + 4.0 * gs + fs + 8.0 * gs;
+
+        // Hide is the rightmost of the four top-row buttons.
+        let hide_x = SW / 2.0 - row_w / 2.0 + 3.0 * (btn_w + gap) + btn_w / 2.0;
+        let _ = press(&mut menu, &kb, (hide_x, row_y + btn_h / 2.0), true, true);
+        assert!(menu.touch_editor.panel_hidden);
+
+        // With the panel hidden, a press where the sliders were grabs the
+        // control underneath instead of the panel.
+        let at = cursor_on(&menu, TouchControl::Jump);
+        let _ = press(&mut menu, &kb, at, true, true);
+        assert_eq!(
+            menu.touch_editor.dragging,
+            Some(EditTarget::Builtin(TouchControl::Jump))
+        );
+        let _ = press(&mut menu, &kb, at, false, false);
+
+        // The Show button sits at the top centre and restores the panel.
+        let _ = press(&mut menu, &kb, (SW / 2.0, 4.0 * gs + btn_h / 2.0), true, true);
+        assert!(!menu.touch_editor.panel_hidden);
     }
 
     #[test]
