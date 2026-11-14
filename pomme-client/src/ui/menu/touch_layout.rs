@@ -838,7 +838,13 @@ mod tests {
         let _ = press(&mut menu, &kb, at, false, false);
 
         // The Show button sits at the top centre and restores the panel.
-        let _ = press(&mut menu, &kb, (SW / 2.0, 4.0 * gs + btn_h / 2.0), true, true);
+        let _ = press(
+            &mut menu,
+            &kb,
+            (SW / 2.0, 4.0 * gs + btn_h / 2.0),
+            true,
+            true,
+        );
         assert!(!menu.touch_editor.panel_hidden);
     }
 

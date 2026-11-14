@@ -196,7 +196,9 @@ impl HeldItemPipeline {
             let invert = hand::arm_invert(hand.right_arm);
             let mut arm = match hand.use_anim {
                 Some(UseAnim::Eat(anim)) => eat_item_matrix(anim, hand.equip_progress, invert),
-                Some(UseAnim::Block) if item.name == "shield" => item_arm_matrix(invert, hand.equip_progress),
+                Some(UseAnim::Block) if item.name == "shield" => {
+                    item_arm_matrix(invert, hand.equip_progress)
+                }
                 Some(UseAnim::Block) => {
                     item_arm_matrix(invert, hand.equip_progress) * block_matrix(invert)
                 }
@@ -399,7 +401,10 @@ mod tests {
             curr_usage_time: 12.0,
             duration: 32.0,
         };
-        assert!(eat_item_matrix(anim, 0.0, -1.0).abs_diff_eq(mirror(eat_item_matrix(anim, 0.0, 1.0)), 1e-5));
+        assert!(
+            eat_item_matrix(anim, 0.0, -1.0)
+                .abs_diff_eq(mirror(eat_item_matrix(anim, 0.0, 1.0)), 1e-5)
+        );
         let display = default_first_person(false, true);
         assert!(
             display

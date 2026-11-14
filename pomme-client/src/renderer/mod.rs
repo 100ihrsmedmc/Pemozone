@@ -1707,7 +1707,7 @@ impl Renderer {
         hide_cursor: bool,
         overlay: Vec<MenuElement>,
         swing_progress: [f32; 2],
-        /// How far each hand's item is lowered (vanilla `equipProgress`).
+        // How far each hand's item is lowered (vanilla `equipProgress`).
         equip_progress: [f32; 2],
         use_anim: [Option<UseAnim>; 2],
         held_items: [Option<(String, azalea_inventory::ItemStackData)>; 2],
