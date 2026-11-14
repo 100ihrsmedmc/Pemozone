@@ -80,7 +80,7 @@ jobs:
           rustup target add --toolchain nightly-2026-08-21 aarch64-apple-ios
 
       - name: Install Vulkan SDK
-        uses: jakocH/install-vulkan-sdk-action@37effcfa045411f8bfbbda26df2fd1b3bf3436fa
+        uses: jakocH/install-vulkan-sdk-action@7fe84289ddbf750f7eff9f8e4588e600e1dd06c8
         with:
           vulkan_version: 1.4.341.0
           install_runtime: false
