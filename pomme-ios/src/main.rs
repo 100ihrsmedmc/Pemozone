@@ -11,6 +11,20 @@ fn main() {
         .map(std::path::PathBuf::from)
         .unwrap_or_default()
         .join("Documents");
+    // iOS creates an app's Documents folder lazily and only lists the app in
+    // the Files app once that folder exists, so a client that never writes
+    // there can be missing from Files entirely. Create it and leave a note,
+    // since an empty folder may be listed as empty or skipped.
+    let _ = std::fs::create_dir_all(&documents);
+    let readme = documents.join("README.txt");
+    if !readme.exists() {
+        let _ = std::fs::write(
+            &readme,
+            "Pemozone's documents folder.\n\n\
+             Drop a launch.txt here to pass the same flags the desktop client\n\
+             takes; see pomme-ios/README.md for the flags.\n",
+        );
+    }
     pomme_client::run(
         LaunchArgs::from_file(&documents.join(LAUNCH_FILE)),
         Platform { data_root: None },
