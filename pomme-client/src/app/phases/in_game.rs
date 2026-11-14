@@ -4792,6 +4792,7 @@ pub fn update_game(
     }
 
     let swing_progress = HANDS.map(|hand| game.interaction.swing_progress(hand, partial_tick));
+    let equip_progress = HANDS.map(|hand| game.interaction.equip_progress(hand, partial_tick));
     let use_anim = HANDS.map(|hand| game.interaction.use_animation(hand, partial_tick));
     let destroy_info = game.interaction.destroy_stage().map(|(pos, stage)| {
         let state = game.chunk_store.get_block_state(pos.x, pos.y, pos.z);
@@ -5409,6 +5410,7 @@ pub fn update_game(
         hide_cursor,
         elements,
         swing_progress,
+        equip_progress,
         use_anim,
         held_items,
         core.menu.main_hand_right(),

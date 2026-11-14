@@ -28,6 +28,8 @@ pub struct HeldHand<'a> {
     pub main_hand: bool,
     pub right_arm: bool,
     pub swing_progress: f32,
+    /// How far the item is lowered (vanilla `equipProgress`, `1 - height`).
+    pub equip_progress: f32,
     pub use_anim: Option<UseAnim>,
 }
 
@@ -193,10 +195,12 @@ impl HeldItemPipeline {
             );
             let invert = hand::arm_invert(hand.right_arm);
             let mut arm = match hand.use_anim {
-                Some(UseAnim::Eat(anim)) => eat_item_matrix(anim, invert),
-                Some(UseAnim::Block) if item.name == "shield" => item_arm_matrix(invert),
-                Some(UseAnim::Block) => item_arm_matrix(invert) * block_matrix(invert),
-                None => first_person_item_matrix(hand.swing_progress, invert),
+                Some(UseAnim::Eat(anim)) => eat_item_matrix(anim, hand.equip_progress, invert),
+                Some(UseAnim::Block) if item.name == "shield" => item_arm_matrix(invert, hand.equip_progress),
+                Some(UseAnim::Block) => {
+                    item_arm_matrix(invert, hand.equip_progress) * block_matrix(invert)
+                }
+                None => first_person_item_matrix(hand.swing_progress, hand.equip_progress, invert),
             };
             // Vanilla `submitArmWithItem`'s crossbow branch: a charged one
             // held still in the main hand turns toward the crosshair.
@@ -279,19 +283,23 @@ impl HeldItemPipeline {
     }
 }
 
-/// Vanilla `ItemInHandRenderer.applyItemArmTransform` (inverseArmHeight 0):
-/// `invert` is [`hand::arm_invert`].
-fn item_arm_matrix(invert: f32) -> Mat4 {
-    Mat4::from_translation(Vec3::new(invert * 0.56, -0.52, -0.72))
+/// Vanilla `ItemInHandRenderer.applyItemArmTransform`: `invert` is
+/// [`hand::arm_invert`], `equip_progress` how far the item is lowered.
+fn item_arm_matrix(invert: f32, equip_progress: f32) -> Mat4 {
+    Mat4::from_translation(Vec3::new(
+        invert * 0.56,
+        -0.52 + equip_progress * -0.6,
+        -0.72,
+    ))
 }
 
 // Vanilla ItemInHandRenderer: applyItemArmTransform + swingArm.
-fn first_person_item_matrix(swing_progress: f32, invert: f32) -> Mat4 {
+fn first_person_item_matrix(swing_progress: f32, equip_progress: f32, invert: f32) -> Mat4 {
     let a = swing_progress;
     let sq = a.sqrt();
     let pi = std::f32::consts::PI;
 
-    item_arm_matrix(invert)
+    item_arm_matrix(invert, equip_progress)
         * Mat4::from_translation(Vec3::new(
             invert * -0.4 * (sq * pi).sin(),
             0.2 * (sq * pi * 2.0).sin(),
@@ -305,7 +313,7 @@ fn first_person_item_matrix(swing_progress: f32, invert: f32) -> Mat4 {
 
 // Vanilla ItemInHandRenderer: applyEatTransform then applyItemArmTransform
 // (EAT/DRINK skip the usual pre-transform).
-fn eat_item_matrix(anim: EatAnim, invert: f32) -> Mat4 {
+fn eat_item_matrix(anim: EatAnim, equip_progress: f32, invert: f32) -> Mat4 {
     let scaled = anim.curr_usage_time / anim.duration;
     // The chew bob runs after the first 20% of the eat, oscillating every 4
     // ticks; the jiggle shoves the item into the mouth over the last bite.
@@ -320,7 +328,7 @@ fn eat_item_matrix(anim: EatAnim, invert: f32) -> Mat4 {
         * Mat4::from_rotation_y((invert * jiggle * 90.0).to_radians())
         * Mat4::from_rotation_x((jiggle * 10.0).to_radians())
         * Mat4::from_rotation_z((invert * jiggle * 30.0).to_radians())
-        * item_arm_matrix(invert)
+        * item_arm_matrix(invert, equip_progress)
 }
 
 /// The fallback first-person display: `block/block.json`'s for the hand, or
@@ -382,8 +390,8 @@ mod tests {
     fn the_left_arm_mirrors_the_right() {
         for swing in [0.0, 0.3, 0.7, 1.0] {
             assert!(
-                first_person_item_matrix(swing, -1.0)
-                    .abs_diff_eq(mirror(first_person_item_matrix(swing, 1.0)), 1e-5),
+                first_person_item_matrix(swing, 0.0, -1.0)
+                    .abs_diff_eq(mirror(first_person_item_matrix(swing, 0.0, 1.0)), 1e-5),
                 "swing {swing}"
             );
         }
@@ -391,7 +399,7 @@ mod tests {
             curr_usage_time: 12.0,
             duration: 32.0,
         };
-        assert!(eat_item_matrix(anim, -1.0).abs_diff_eq(mirror(eat_item_matrix(anim, 1.0)), 1e-5));
+        assert!(eat_item_matrix(anim, 0.0, -1.0).abs_diff_eq(mirror(eat_item_matrix(anim, 0.0, 1.0)), 1e-5));
         let display = default_first_person(false, true);
         assert!(
             display

@@ -203,6 +203,12 @@ pub struct InteractionState {
     swing_time: i32,
     attack_anim: f32,
     o_attack_anim: f32,
+    /// Vanilla `ItemInHandRenderer.mainHandHeight` and its previous tick's
+    /// value: 1 is the item fully raised, 0 fully lowered. It chases the
+    /// attack cooldown cubed, so the item dips after a swing and rises back
+    /// as the cooldown recharges.
+    main_hand_height: f32,
+    o_main_hand_height: f32,
     /// Vanilla `Player.attackStrengthTicker`. The companion `itemSwapTicker`
     /// (hand-raise animation) is not tracked.
     attack_strength_ticker: u32,
@@ -240,6 +246,8 @@ impl InteractionState {
             swing_time: 0,
             attack_anim: 0.0,
             o_attack_anim: 0.0,
+            main_hand_height: 1.0,
+            o_main_hand_height: 1.0,
             attack_strength_ticker: 0,
             last_item_in_main_hand: None,
             item_cooldowns: ItemCooldowns::default(),
@@ -660,6 +668,27 @@ impl InteractionState {
         (self.attack_strength_ticker as f32 / delay).clamp(0.0, 1.0)
     }
 
+    /// Vanilla `ItemInHandRenderer.tick` for the main hand: the held item's
+    /// height chases `getAttackStrengthScale(1)` cubed by at most 0.4 a tick,
+    /// so a swing lowers the item and the cooldown raises it back.
+    pub fn tick_hand_height(&mut self, delay: f32) {
+        self.o_main_hand_height = self.main_hand_height;
+        let strength = ((self.attack_strength_ticker as f32 + 1.0) / delay).clamp(0.0, 1.0);
+        let target = strength * strength * strength;
+        self.main_hand_height += (target - self.main_hand_height).clamp(-0.4, 0.4);
+    }
+
+    /// Vanilla's `equipProgress` for a hand (`1 - height`, interpolated):
+    /// how far the item is lowered. The off hand stays raised.
+    pub fn equip_progress(&self, hand: InteractionHand, partial_tick: f32) -> f32 {
+        if hand != InteractionHand::MainHand {
+            return 0.0;
+        }
+        let height = self.o_main_hand_height
+            + (self.main_hand_height - self.o_main_hand_height) * partial_tick;
+        1.0 - height
+    }
+
     /// Vanilla `Player.cannotAttackWithItem(stack, 0)` (the one call site
     /// passes no tolerance); the ratio is unclamped, unlike the scale.
     fn cannot_attack_with_item(
@@ -1050,6 +1079,8 @@ impl InteractionState {
         self.swing_time = 0;
         self.attack_anim = 0.0;
         self.o_attack_anim = 0.0;
+        self.main_hand_height = 1.0;
+        self.o_main_hand_height = 1.0;
         self.attack_strength_ticker = 0;
         self.last_item_in_main_hand = None;
         // The new `LocalPlayer` starts with no cooldowns.

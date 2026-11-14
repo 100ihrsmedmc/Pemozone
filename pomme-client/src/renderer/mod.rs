@@ -202,6 +202,8 @@ enum RenderMode<'a> {
         overlay: Vec<MenuElement>,
         /// The main hand's then the offhand's, as for `held_items`.
         swing_progress: [f32; 2],
+        /// How far each hand's item is lowered (vanilla `equipProgress`).
+        equip_progress: [f32; 2],
         use_anim: [Option<UseAnim>; 2],
         /// The main hand's then the offhand's item.
         held_items: [Option<pipelines::held_item::HeldItemInfo>; 2],
@@ -1705,6 +1707,8 @@ impl Renderer {
         hide_cursor: bool,
         overlay: Vec<MenuElement>,
         swing_progress: [f32; 2],
+        /// How far each hand's item is lowered (vanilla `equipProgress`).
+        equip_progress: [f32; 2],
         use_anim: [Option<UseAnim>; 2],
         held_items: [Option<(String, azalea_inventory::ItemStackData)>; 2],
         main_hand_right: bool,
@@ -1766,6 +1770,7 @@ impl Renderer {
                 block_render,
                 overlay,
                 swing_progress,
+                equip_progress,
                 use_anim,
                 held_items,
                 main_hand_right,
@@ -2467,6 +2472,7 @@ impl Renderer {
                 block_render,
                 overlay,
                 swing_progress,
+                equip_progress,
                 use_anim,
                 held_items,
                 main_hand_right,
@@ -2712,6 +2718,7 @@ impl Renderer {
                             aspect,
                             hud_fov,
                             swing_progress[0],
+                            equip_progress[0],
                             *main_hand_right,
                             view_effect,
                             hand_pose,
@@ -2728,6 +2735,7 @@ impl Renderer {
                                 main_hand: i == 0,
                                 right_arm: *main_hand_right == (i == 0),
                                 swing_progress: swing_progress[i],
+                                equip_progress: equip_progress[i],
                                 use_anim: use_anim[i],
                             })
                         })

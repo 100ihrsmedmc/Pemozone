@@ -4298,6 +4298,9 @@ impl AppCore {
 
         game.interaction
             .tick_player_state(input.is_cursor_captured(), held_stack);
+        let attack_delay =
+            crate::player::interaction::attack_strength_delay(&game.player.attributes);
+        game.interaction.tick_hand_height(attack_delay);
 
         Self::send_abilities_packet(connection, game);
         Self::send_input_packet(input, connection, game);
