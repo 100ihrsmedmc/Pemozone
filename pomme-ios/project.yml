@@ -47,6 +47,14 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         ITSAppUsesNonExemptEncryption: false
+        # The client reads launch.txt from the app's Documents folder, and iOS
+        # hides that folder from the Files app unless the app opts in. Both
+        # keys are needed: UIFileSharingEnabled exposes it under "On My iPhone
+        # / iPad", and LSSupportsOpeningDocumentsInPlace lets Files browse it
+        # in place instead of copying it out. Only Documents is exposed;
+        # the data folder stays in Library/Application Support.
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
     settings:
       base:
         PRODUCT_NAME: Pemozone

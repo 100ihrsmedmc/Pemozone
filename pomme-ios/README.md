@@ -42,6 +42,11 @@ flags the desktop client takes. The data folder (laid out as on desktop:
 `minecraft/`, `profiles/` and so on) is the app's `Library/Application
 Support/Pemozone`; `minecraft/` and the cache are kept out of iCloud backups.
 
+The app opts into Files-app sharing, so the Documents folder appears under "On
+My iPhone / iPad → Pemozone". That lets you drop a `launch.txt` in from the
+device itself instead of only over a cable from a Mac. Only Documents is
+exposed; the data folder in Application Support stays private.
+
 ## TestFlight
 
 ```sh
