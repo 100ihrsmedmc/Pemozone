@@ -39,13 +39,21 @@ just ios-config --version 26.2 --username Tester \
 
 `launch.txt` (what `ios-config` writes, in the app's Documents) holds the same
 flags the desktop client takes. The data folder (laid out as on desktop:
-`minecraft/`, `profiles/` and so on) is the app's `Library/Application
-Support/Pemozone`; `minecraft/` and the cache are kept out of iCloud backups.
+`minecraft/`, `profiles/` and so on) is `Documents/Game Data` inside the app's
+container, so it is reachable from the Files app; `minecraft/` and the cache
+are kept out of iCloud backups.
 
-The app opts into Files-app sharing, so the Documents folder appears under "On
-My iPhone / iPad → Pemozone". That lets you drop a `launch.txt` in from the
-device itself instead of only over a cable from a Mac. Only Documents is
-exposed; the data folder in Application Support stays private.
+On the first launch after this change, an older install's data in
+`Library/Application Support/Pemozone` is moved into `Documents/Game Data`.
+Folders are merged and a file that already exists at the destination is left
+alone rather than overwritten, so nothing is lost; if a move fails, the app
+stops instead of leaving the data split between the two folders.
+
+The app opts into Files-app sharing, so the container appears under "On My
+iPhone / iPad → Pemozone". That lets you drop a `launch.txt` in from the
+device itself instead of only over a cable from a Mac, and it puts the game
+data — saves, resource packs, shaders, mods and configs — within reach of the
+Files app too.
 
 ## TestFlight
 
