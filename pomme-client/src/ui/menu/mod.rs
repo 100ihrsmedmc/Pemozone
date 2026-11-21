@@ -646,6 +646,8 @@ enum Screen {
     DebugOptions,
     /// The touch-control layout editor, opened from Controls.
     OptionsTouchLayout,
+    /// Shader pack selection screen, opened from Video Settings.
+    OptionsShaderPacks,
 }
 
 impl Screen {
@@ -672,6 +674,7 @@ impl Screen {
             Self::CreditsRoll => Self::CreditsRoll,
             Self::DebugOptions => Self::DebugOptions,
             Self::OptionsTouchLayout => Self::OptionsTouchLayout,
+            Self::OptionsShaderPacks => Self::OptionsShaderPacks,
             Self::ServerList => Self::ServerList,
             Self::WorldList => Self::WorldList,
             Self::CreateWorld => Self::CreateWorld,
@@ -1764,6 +1767,13 @@ impl MainMenu {
                 self.build_options_chat(screen_w, screen_h, input, &text_width_fn, key_bindings)
             }
             Screen::OptionsResourcePacks => self.build_options_resource_packs(
+                screen_w,
+                screen_h,
+                input,
+                &text_width_fn,
+                key_bindings,
+            ),
+            Screen::OptionsShaderPacks => self.build_options_shader_packs(
                 screen_w,
                 screen_h,
                 input,

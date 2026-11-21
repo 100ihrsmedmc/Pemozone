@@ -6,6 +6,7 @@ use crate::renderer::Renderer;
 use crate::resources::packs::{Pack, PackCompat};
 use crate::ui::common::BTN_H;
 use crate::ui::text::TextSpan;
+use open;
 
 /// `KeyBindsList.KeyEntry`'s collision stripe.
 const COLLISION_STRIPE: [f32; 4] = common::rgb(0xffff00);
@@ -485,7 +486,6 @@ impl MainMenu {
             "Graphics:",
             "Biome Blend:",
             "Prioritize Chunk Updates:",
-            "Simulation Distance:",
             "Smooth Lighting:",
             "Particles:",
             "Mipmap Levels:",
@@ -1580,9 +1580,7 @@ impl MainMenu {
                         self.save_settings(key_bindings);
                     }
                     if label.starts_with("Shader Pack:") {
-                        self.shader_pack =
-                            next_shader_pack(&self.shader_packs_dir, self.shader_pack.as_deref());
-                        self.save_settings(key_bindings);
+                        self.set_screen(Screen::OptionsShaderPacks, key_bindings);
                     }
                     if label.starts_with(INACTIVITY_FPS_LIMIT) {
                         self.inactivity_fps_limit = self.inactivity_fps_limit.cycle();
@@ -2095,6 +2093,218 @@ impl MainMenu {
         if clicked && h {
             self.pack_search.clear();
             self.set_screen(Screen::Options, key_bindings);
+        }
+
+        MainMenuResult {
+            elements,
+            action: MenuAction::None,
+            cursor_pointer: any_hovered,
+            clicked_button: false,
+        }
+    }
+
+    pub(super) fn build_options_shader_packs(
+        &mut self,
+        sw: f32,
+        sh: f32,
+        input: &MenuInput,
+        text_width_fn: common::TextWidthFn,
+        key_bindings: &KeyBindings,
+    ) -> MainMenuResult {
+        if input.escape {
+            self.set_screen(Screen::OptionsVideo, key_bindings);
+            return empty_result();
+        }
+
+        self.cycle_fields(input, 1);
+
+        let gs = self.gui_scale(sw, sh);
+        let fs = common::FONT_SIZE * gs;
+        let btn_h = common::BTN_H * gs;
+        let gap = BTN_GAP * gs;
+        let cx = sw / 2.0;
+        let cursor = input.cursor;
+        let clicked = input.clicked;
+
+        let mut elements = vec![MenuElement::BlurBackground];
+        let mut any_hovered = false;
+
+        common::push_menu_background(&mut elements, sw, sh);
+
+        let pad = 4.0 * gs;
+        let entry_h = 36.0 * gs;
+        let entry_gap = 2.0 * gs;
+        let small_fs = 6.0 * gs;
+        let list_w = 200.0 * gs;
+        let list_gap = 15.0 * gs;
+        let left_x = cx - list_gap - list_w;
+        let right_x = cx + list_gap;
+        let text_x = 34.0 * gs;
+        let field_h = 15.0 * gs;
+        let hover_color: [f32; 4] = [1.0, 1.0, 1.0, 0.1];
+
+        let mut header_y = pad;
+        elements.push(MenuElement::Text {
+            x: cx,
+            y: header_y,
+            text: "Select Shader Pack".into(),
+            scale: fs,
+            color: WHITE,
+            centered: true,
+        });
+        header_y += fs + pad;
+
+        let content_top = header_y;
+        let footer_h = HEADER_FOOTER_H * gs;
+        let content_bottom = sh - footer_h;
+        let done_y = sh - footer_h + (footer_h - btn_h) / 2.0;
+
+        elements.push(MenuElement::ScissorPush {
+            x: 0.0,
+            y: content_top,
+            w: sw,
+            h: content_bottom - content_top,
+        });
+
+        let list_top = content_top + pad;
+        let label_h = fs * 1.5;
+
+        elements.push(MenuElement::Text {
+            x: left_x + list_w / 2.0,
+            y: list_top + (label_h - fs) / 2.0,
+            text: "Available".into(),
+            scale: fs,
+            color: WHITE,
+            centered: true,
+        });
+        elements.push(MenuElement::Text {
+            x: right_x + list_w / 2.0,
+            y: list_top + (label_h - fs) / 2.0,
+            text: "Selected".into(),
+            scale: fs,
+            color: WHITE,
+            centered: true,
+        });
+
+        let entries_top = list_top + label_h + pad;
+
+        // Scan shaderpacks directory
+        let mut packs: Vec<String> = std::fs::read_dir(&self.shader_packs_dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+            .filter(|entry| {
+                let path = entry.path();
+                path.is_dir() || path.extension().is_some_and(|e| e.eq_ignore_ascii_case("zip"))
+            })
+            .map(|entry| entry.file_name().to_string_lossy().into_owned())
+            .collect();
+        packs.sort();
+
+        let current = self.shader_pack.clone();
+
+        let push_entry = |elements: &mut Vec<MenuElement>,
+                          any_hovered: &mut bool,
+                          panel_x: f32,
+                          ey: f32,
+                          name: &str,
+                          selected: bool| -> bool {
+            let hovered = common::hit_test(cursor, [panel_x, ey, list_w, entry_h]);
+            if hovered {
+                elements.push(MenuElement::Rect {
+                    x: panel_x,
+                    y: ey,
+                    w: list_w,
+                    h: entry_h,
+                    corner_radius: 0.0,
+                    color: hover_color,
+                });
+            }
+            let name_color = if selected { common::rgb(0x55ffff) } else { WHITE };
+            elements.push(MenuElement::Text {
+                x: panel_x + text_x,
+                y: ey + 4.0 * gs,
+                text: name.into(),
+                scale: fs,
+                color: name_color,
+                centered: false,
+            });
+            *any_hovered |= hovered;
+            hovered
+        };
+
+        // Available packs (left panel)
+        for (i, pack) in packs.iter().enumerate() {
+            let ey = entries_top + i as f32 * (entry_h + entry_gap);
+            let selected = current.as_ref() == Some(pack);
+            if push_entry(&mut elements, &mut any_hovered, left_x, ey, pack, selected) && clicked {
+                self.shader_pack = Some(pack.clone());
+                self.save_settings(key_bindings);
+            }
+        }
+
+        // Selected pack (right panel) - show current or OFF
+        let selected_name = current.as_deref().unwrap_or("OFF");
+        let selected_desc = if current.is_some() {
+            "Currently active shader pack"
+        } else {
+            "No shader pack selected"
+        };
+        push_entry(
+            &mut elements,
+            &mut any_hovered,
+            right_x,
+            entries_top,
+            selected_name,
+            true,
+        );
+        // Description
+        elements.push(MenuElement::Text {
+            x: right_x + text_x,
+            y: entries_top + 4.0 * gs + fs + gs,
+            text: selected_desc.into(),
+            scale: small_fs,
+            color: COL_DIM,
+            centered: false,
+        });
+
+        elements.push(MenuElement::ScissorPop);
+
+        // Open Shader Pack Folder button
+        let btn_w = 150.0 * gs;
+        let h = common::push_button(
+            &mut elements,
+            cursor,
+            cx - btn_w - gap / 2.0,
+            done_y,
+            btn_w,
+            btn_h,
+            gs,
+            fs,
+            "Open Shader Pack Folder",
+            true,
+        );
+        any_hovered |= h;
+        if clicked && h {
+            let _ = open::that_detached(&self.shader_packs_dir);
+        }
+
+        // Done button
+        let h = common::push_button(
+            &mut elements,
+            cursor,
+            cx + gap / 2.0,
+            done_y,
+            btn_w,
+            btn_h,
+            gs,
+            fs,
+            "Done",
+            true,
+        );
+        any_hovered |= h;
+        if clicked && h {
+            self.set_screen(Screen::OptionsVideo, key_bindings);
         }
 
         MainMenuResult {

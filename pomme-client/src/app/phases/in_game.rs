@@ -5445,6 +5445,7 @@ pub fn update_game(
         } else {
             core.menu.cloud_mode
         },
+        core.menu.entity_shadows,
         effective_rd,
         distant_terrain,
         player_preview,

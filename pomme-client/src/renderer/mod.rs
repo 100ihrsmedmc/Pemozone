@@ -229,6 +229,7 @@ enum RenderMode<'a> {
         signs: &'a [SignRenderInfo],
         weather: &'a [WeatherColumn],
         cloud_mode: CloudMode,
+        entity_shadows: bool,
         render_distance: u32,
         /// How far distant terrain draws, in chunks; 0 for none.
         distant_terrain: u32,
@@ -879,6 +880,7 @@ impl Renderer {
             render_distance,
             hand_light,
             eyes_in_water,
+            entity_shadows,
             ..
         } = mode
         else {
@@ -1730,10 +1732,11 @@ impl Renderer {
         signs: &[SignRenderInfo],
         weather: &[WeatherColumn],
         cloud_mode: CloudMode,
+        entity_shadows: bool,
         render_distance: u32,
         distant_terrain: u32,
         player_preview: Option<PlayerPreview>,
-        book_preview: Option<BookPreview>,
+        book_preview: Option<PlayerPreview>,
         eyes_in_water: bool,
     ) -> Result<(), RendererError> {
         // Refresh the far plane before this frame's view/projection and fog.
@@ -1792,6 +1795,7 @@ impl Renderer {
                 signs,
                 weather,
                 cloud_mode,
+                entity_shadows,
                 render_distance,
                 distant_terrain,
                 player_preview,
@@ -2494,6 +2498,7 @@ impl Renderer {
                 signs: _,
                 weather,
                 cloud_mode,
+                entity_shadows,
                 render_distance,
                 distant_terrain,
                 player_preview,
@@ -2604,8 +2609,10 @@ impl Renderer {
                     let ent_frustum = self.camera.frustum_planes();
                     let ent_cull_dist = entity_cull_distance(*render_distance);
 
-                    self.entity_shadow_pipeline
-                        .draw(&mut pass, frame, shadows, anchor, eye);
+                    if *entity_shadows {
+                        self.entity_shadow_pipeline
+                            .draw(&mut pass, frame, shadows, anchor, eye);
+                    }
 
                     self.entity_renderer.draw(
                         &mut pass,

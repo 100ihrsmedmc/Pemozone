@@ -850,6 +850,38 @@ impl ApplicationHandler for App {
             WindowEvent::ModifiersChanged(mods) => {
                 self.core.input.set_modifiers(mods);
             }
+            WindowEvent::Ime(ime) => {
+                // Handle IME events for text input (critical for iOS keyboard)
+                use winit::event::Ime;
+                match ime {
+                    Ime::Preedit(text, _cursor) => {
+                        // Composition text - not committed yet, but we can show it
+                        for ch in text.chars() {
+                            if !ch.is_control() {
+                                self.core.input.text_events.push(
+                                    crate::ui::text_edit::TextInputEvent::Char(ch),
+                                );
+                            }
+                        }
+                    }
+                    Ime::Commit(text) => {
+                        // Committed text from IME
+                        for ch in text.chars() {
+                            if !ch.is_control() {
+                                self.core.input.text_events.push(
+                                    crate::ui::text_edit::TextInputEvent::Char(ch),
+                                );
+                            }
+                        }
+                    }
+                    Ime::Enabled => {
+                        // IME was enabled
+                    }
+                    Ime::Disabled => {
+                        // IME was disabled
+                    }
+                }
+            }
             // TODO: Migrate _fully_ to Action system
             WindowEvent::KeyboardInput { event, .. } => {
                 let key = input::key_code(&event);
