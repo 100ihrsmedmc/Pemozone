@@ -1063,7 +1063,23 @@ impl MainMenu {
             display_mode: DisplayMode::from_u8(settings.display_mode),
             cloud_mode: CloudMode::from_u8(settings.cloud_mode),
             shader_pack: settings.shader_pack.clone(),
-            shader_packs_dir: game_dir.join("shaderpacks"),
+            shader_packs_dir: {
+                #[cfg(target_os = "ios")]
+                {
+                    // On iOS, use Documents/shaderpacks so it's accessible via Files app
+                    let documents = std::env::var_os("HOME")
+                        .map(std::path::PathBuf::from)
+                        .unwrap_or_default()
+                        .join("Documents");
+                    let shaderpacks = documents.join("shaderpacks");
+                    let _ = std::fs::create_dir_all(&shaderpacks);
+                    shaderpacks
+                }
+                #[cfg(not(target_os = "ios"))]
+                {
+                    game_dir.join("shaderpacks")
+                }
+            },
             attack_indicator: crate::ui::hud::AttackIndicatorMode::from_u8(
                 settings.attack_indicator,
             ),
