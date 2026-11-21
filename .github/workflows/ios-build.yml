@@ -161,8 +161,8 @@ jobs:
           unzip -p "$IPA" "Payload/Pemozone.app/Info.plist" > /tmp/Info.plist
           plutil -p /tmp/Info.plist | grep -q "CFBundleDisplayName.*Pemozone" || { echo "ERROR: CFBundleDisplayName not Pemozone"; exit 1; }
           plutil -p /tmp/Info.plist | grep -q "CFBundleIdentifier.*com.pemozone.client" || { echo "ERROR: CFBundleIdentifier not com.pemozone.client"; exit 1; }
-          plutil -p /tmp/Info.plist | grep -q "UIFileSharingEnabled.*1" || { echo "ERROR: UIFileSharingEnabled not true"; exit 1; }
-          plutil -p /tmp/Info.plist | grep -q "LSSupportsOpeningDocumentsInPlace.*1" || { echo "ERROR: LSSupportsOpeningDocumentsInPlace not true"; exit 1; }
+          plutil -p /tmp/Info.plist | grep -q "UIFileSharingEnabled.*\(true\|1\)" || { echo "ERROR: UIFileSharingEnabled not true"; exit 1; }
+          plutil -p /tmp/Info.plist | grep -q "LSSupportsOpeningDocumentsInPlace.*\(true\|1\)" || { echo "ERROR: LSSupportsOpeningDocumentsInPlace not true"; exit 1; }
           
           # Verify ARM64 executable
           unzip -p "$IPA" "Payload/Pemozone.app/Pemozone" > /tmp/Pemozone_exec
