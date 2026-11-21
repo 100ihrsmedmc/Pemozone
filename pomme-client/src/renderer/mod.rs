@@ -880,7 +880,7 @@ impl Renderer {
             render_distance,
             hand_light,
             eyes_in_water,
-            entity_shadows,
+            _entity_shadows,
             ..
         } = mode
         else {
@@ -1736,7 +1736,7 @@ impl Renderer {
         render_distance: u32,
         distant_terrain: u32,
         player_preview: Option<PlayerPreview>,
-        book_preview: Option<PlayerPreview>,
+        book_preview: Option<BookPreview>,
         eyes_in_water: bool,
     ) -> Result<(), RendererError> {
         // Refresh the far plane before this frame's view/projection and fog.

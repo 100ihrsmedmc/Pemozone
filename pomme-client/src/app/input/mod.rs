@@ -1016,6 +1016,10 @@ impl InputState {
         std::mem::take(&mut self.text_events)
     }
 
+    pub fn push_text_event(&mut self, event: crate::ui::text_edit::TextInputEvent) {
+        self.text_events.push(event);
+    }
+
     pub fn key_mods(&self) -> crate::ui::text_edit::KeyMods {
         let state = self.modifiers.state();
         crate::ui::text_edit::KeyMods {

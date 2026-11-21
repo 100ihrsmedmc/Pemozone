@@ -2108,7 +2108,7 @@ impl MainMenu {
         sw: f32,
         sh: f32,
         input: &MenuInput,
-        text_width_fn: common::TextWidthFn,
+        _text_width_fn: common::TextWidthFn,
         key_bindings: &KeyBindings,
     ) -> MainMenuResult {
         if input.escape {
@@ -2140,7 +2140,7 @@ impl MainMenu {
         let left_x = cx - list_gap - list_w;
         let right_x = cx + list_gap;
         let text_x = 34.0 * gs;
-        let field_h = 15.0 * gs;
+        let _field_h = 15.0 * gs;
         let hover_color: [f32; 4] = [1.0, 1.0, 1.0, 0.1];
 
         let mut header_y = pad;

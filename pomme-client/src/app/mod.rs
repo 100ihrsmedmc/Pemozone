@@ -858,7 +858,7 @@ impl ApplicationHandler for App {
                         // Composition text - not committed yet, but we can show it
                         for ch in text.chars() {
                             if !ch.is_control() {
-                                self.core.input.text_events.push(
+                                self.core.input.push_text_event(
                                     crate::ui::text_edit::TextInputEvent::Char(ch),
                                 );
                             }
@@ -868,7 +868,7 @@ impl ApplicationHandler for App {
                         // Committed text from IME
                         for ch in text.chars() {
                             if !ch.is_control() {
-                                self.core.input.text_events.push(
+                                self.core.input.push_text_event(
                                     crate::ui::text_edit::TextInputEvent::Char(ch),
                                 );
                             }
