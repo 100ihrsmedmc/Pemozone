@@ -147,13 +147,55 @@ jobs:
           path: Pemozone-unsigned.ipa
           if-no-files-found: error
 
-      - name: Publish IPA to GitHub Release
+      - name: Verify IPA
+        run: |
+          set -euo pipefail
+          IPA="Pemozone-unsigned.ipa"
+          test -s "$IPA"
+          echo "IPA size: $(wc -c < "$IPA") bytes"
+          
+          # Verify bundle structure
+          unzip -l "$IPA" | grep -q "Payload/Pemozone.app/" || { echo "ERROR: Missing Payload/Pemozone.app/"; exit 1; }
+          
+          # Extract and verify Info.plist
+          unzip -p "$IPA" "Payload/Pemozone.app/Info.plist" > /tmp/Info.plist
+          plutil -p /tmp/Info.plist | grep -q "CFBundleDisplayName.*Pemozone" || { echo "ERROR: CFBundleDisplayName not Pemozone"; exit 1; }
+          plutil -p /tmp/Info.plist | grep -q "CFBundleIdentifier.*com.pemozone.client" || { echo "ERROR: CFBundleIdentifier not com.pemozone.client"; exit 1; }
+          plutil -p /tmp/Info.plist | grep -q "UIFileSharingEnabled.*1" || { echo "ERROR: UIFileSharingEnabled not true"; exit 1; }
+          plutil -p /tmp/Info.plist | grep -q "LSSupportsOpeningDocumentsInPlace.*1" || { echo "ERROR: LSSupportsOpeningDocumentsInPlace not true"; exit 1; }
+          
+          # Verify ARM64 executable
+          unzip -p "$IPA" "Payload/Pemozone.app/Pemozone" > /tmp/Pemozone_exec
+          file /tmp/Pemozone_exec | grep -q "Mach-O 64-bit arm64" || { echo "ERROR: Executable not ARM64"; exit 1; }
+          
+          # Verify frameworks
+          unzip -l "$IPA" | grep -q "Frameworks/soft_oal.framework" || { echo "ERROR: Missing soft_oal.framework"; exit 1; }
+          
+          echo "✅ IPA verification passed"
+
+      - name: Delete ALL existing GitHub Releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          echo "Fetching all releases..."
+          gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --json tagName,isLatest,isPrerelease --jq '.[] | "\(.tagName) \(.isLatest) \(.isPrerelease)"' | while read -r tag latest prerelease; do
+            echo "Deleting release: $tag (latest=$latest, prerelease=$prerelease)"
+            gh release delete "$tag" --repo "$GITHUB_REPOSITORY" --yes || echo "Failed to delete $tag (may not exist)"
+          done
+          echo "All releases deleted"
+
+      - name: Publish IPA to GitHub Release (replaces all previous)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
           TAG="v3.0.0-build-${GITHUB_RUN_NUMBER}"
-          gh release create "$TAG" Pemozone-unsigned.ipa \
+          IPA="Pemozone-unsigned.ipa"
+          
+          gh release create "$TAG" "$IPA" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Pemozone 3.0 (build #${GITHUB_RUN_NUMBER})" \
-            --notes "Pemozone 3.0: the Touch Layout editor now has a Hide / Show button so the panel never covers the controls you are placing.\n\nExperimental iOS build produced by GitHub Actions.\n\n- Build: successful\n- Platform: iOS / Apple Silicon\n- Status: Unsigned IPA (not code-signed)." \
+            --notes "Pemozone 3.0: Touch Layout editor with Hide/Show panel, iOS keyboard IME support, Shader Packs UI, Entity Shadows toggle, Simulation Distance enabled, Documents/shaderpacks for Files app access.\n\nExperimental iOS build produced by GitHub Actions.\n\n- Build: successful\n- Platform: iOS / Apple Silicon (ARM64)\n- Status: **Unsigned IPA** (not code-signed)\n- Files App: Documents folder exposed (UIFileSharingEnabled + LSSupportsOpeningDocumentsInPlace)\n- Shaderpacks: Accessible via On My iPhone/iPad → Pemozone → shaderpacks/\n\n**This release replaces ALL previous releases.**" \
             --prerelease
+          echo "✅ Release created: $TAG"
