@@ -880,7 +880,7 @@ impl Renderer {
             render_distance,
             hand_light,
             eyes_in_water,
-            _entity_shadows,
+            entity_shadows: _,
             ..
         } = mode
         else {
